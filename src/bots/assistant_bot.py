@@ -9,6 +9,7 @@ import urllib.request
 
 from botbuilder.core import ConversationState, TurnContext, UserState, MessageFactory
 from botbuilder.schema import ChannelAccount, CardAction, ActionTypes
+from botbuilder.dialogs import Dialog
 
 from openai import AzureOpenAI
 from openai.types.beta.assistant_stream_event import ThreadMessageDelta, ThreadRunRequiresAction, ThreadRunCreated, ThreadRunFailed
@@ -17,15 +18,23 @@ from openai.types.beta.threads import TextDeltaBlock, ImageFileDeltaBlock
 from data_models import ConversationData, Attachment, mime_type
 from bots.state_management_bot import StateManagementBot
 from services.bing import BingClient
+from services.graph import GraphClient
 
 class AssistantBot(StateManagementBot):
 
-    def __init__(self, conversation_state: ConversationState, user_state: UserState, aoai_client: AzureOpenAI, assistant_id: str, bing_client: BingClient):
-        super().__init__(conversation_state, user_state)
+    def __init__(
+            self, conversation_state: ConversationState, user_state: UserState, 
+            aoai_client: AzureOpenAI, assistant_id: str, 
+            bing_client: BingClient, 
+            graph_client: GraphClient, 
+            dialog: Dialog
+        ):
+        super().__init__(conversation_state, user_state, dialog)
         self.aoai_client = aoai_client
         self.chat_client = aoai_client.chat
         self.file_client = aoai_client.files
         self.bing_client = bing_client
+        self.graph_client = graph_client
 
         self.deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
         self.instructions = os.getenv("LLM_INSTRUCTIONS")
@@ -37,8 +46,14 @@ class AssistantBot(StateManagementBot):
         for member in members_added:
             if member.id != turn_context.activity.recipient.id:
                 await turn_context.send_activity(self.welcome_message)
+                await self.handle_login(turn_context)
 
     async def on_message_activity(self, turn_context: TurnContext):
+        
+        # Enforce login
+        loggedIn = await self.handle_login(turn_context)
+        if not loggedIn:
+            return False
         
         # Load conversation state
         conversation_data = await self.conversation_data_accessor.get(turn_context, ConversationData([]))
@@ -146,6 +161,9 @@ class AssistantBot(StateManagementBot):
                     elif tool_call.function.name == "bing_query":
                         response = await self.bing_query(conversation_data, arguments["query"], arguments["type"])
                         tool_outputs.append({"tool_call_id": tool_call.id, "output": response})
+                    elif tool_call.function.name == "schedule_event":
+                        response = await self.schedule_event(conversation_data, turn_context.activity.token, arguments["subject"], arguments["start"], arguments["end"])
+                        tool_outputs.append({"tool_call_id": tool_call.id, "output": response})
                     else:
                         tool_outputs.append({"tool_call_id": tool_call.id, "output": "Tool not found"})
 
@@ -236,6 +254,8 @@ class AssistantBot(StateManagementBot):
         return response.choices[0].message.content
 
     async def bing_query(self, conversation_data: ConversationData, query: str, type: str):
-        print("Searching Bing...")
         return self.bing_client.query(query, type)
+
+    async def schedule_event(self, conversation_data: ConversationData, token: str, subject: str, start: str, end: str):
+        return self.graph_client.schedule_event(token, subject, start, end)
 

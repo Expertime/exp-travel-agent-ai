@@ -12,5 +12,4 @@ class BingClient():
         response = requests.get(self.endpoint, headers=self.headers, params=params)
         response.raise_for_status()
         search_results = response.json()
-        print(search_results)
         return json.dumps(search_results)

@@ -8,6 +8,9 @@ from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from openai import AzureOpenAI
 
 from bots import AssistantBot
+from services.bing import BingClient
+from services.graph import GraphClient
+from dialogs import LoginDialog
 from data_models import Attachment
 
 current_directory = os.path.dirname(__file__)
@@ -37,6 +40,9 @@ async def bot(aoai_client, turn_context):
         user_state=UserState(MemoryStorage()),
         aoai_client=aoai_client,
         assistant_id=os.getenv("AZURE_OPENAI_ASSISTANT_ID"),
+        bing_client=BingClient(os.getenv("AZURE_BING_API_KEY")),
+        graph_client=GraphClient(),
+        dialog=LoginDialog()
     )
     conversation_data = await _bot.conversation_data_accessor.get(turn_context)
     conversation_data.thread_id = None

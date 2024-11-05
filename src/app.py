@@ -21,8 +21,10 @@ from botbuilder.integration.aiohttp import CloudAdapter, ConfigurationBotFramewo
 from openai import AzureOpenAI
 from dotenv import load_dotenv
 
+from dialogs import LoginDialog
 from bots import AssistantBot
 from services.bing import BingClient
+from services.graph import GraphClient
 from config import DefaultConfig
 
 from routes.api.messages import messages_routes
@@ -61,6 +63,7 @@ aoai_client = AzureOpenAI(
 )
 
 bing_client = BingClient(os.getenv("AZURE_BING_API_KEY"))
+graph_client = GraphClient()
 
 # Conversation history storage
 storage = None
@@ -82,8 +85,9 @@ user_state = UserState(storage)
 conversation_state = ConversationState(storage)
 
 # Create the bot
-bot = AssistantBot(conversation_state, user_state, aoai_client, os.getenv("AZURE_OPENAI_ASSISTANT_ID"), bing_client)
+dialog = LoginDialog()
+bot = AssistantBot(conversation_state, user_state, aoai_client, os.getenv("AZURE_OPENAI_ASSISTANT_ID"), bing_client, graph_client, dialog)
 app = create_app(adapter, bot, aoai_client)
 
 if __name__ == "__main__":
-    web.run_app(app, host="localhost", port=3978)
+    web.run_app(app, host="localhost", port=8080)

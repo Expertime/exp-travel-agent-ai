@@ -80,7 +80,7 @@ resource backend 'Microsoft.Web/sites@2023-12-01' = {
       logsDirectorySizeLimit: 35
       ipSecurityRestrictions: ipSecurityRestrictions
       publicNetworkAccess: 'Enabled'
-      ipSecurityRestrictionsDefaultAction: 'Deny'
+      ipSecurityRestrictionsDefaultAction: 'Allow'
       scmIpSecurityRestrictionsDefaultAction: 'Allow'
       http20Enabled: true
       linuxFxVersion: 'PYTHON|3.10'
@@ -186,11 +186,11 @@ resource backend 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'LLM_WELCOME_MESSAGE'
-          value: 'Hello and welcome!'
+          value: 'Welcome to the Travel Agent Sample! You can use this chat to: <br>&ensp;- Get recommendations of places to visit and things to do;<br>&ensp;- Upload your travel bookings and generate an itinerary;<br>&ensp;- Upload pictures of signs, menus and more to get information about them;<br>&ensp;- Ask for help with budgeting a trip;<br>&ensp;- And more!<br> To upload files, use the attachment button on the left, attach a file and hit enter to upload. You will get confirmation when the file is ready to use. You will also be prompted whether you\'d like to add it to Code Interpreter or File Search. Use Code Interpreter for mathematical operations, and File Search to use the file contents as context for your question. You may skip this step for images.'
         }
         {
           name: 'LLM_INSTRUCTIONS'
-          value: 'Answer the questions as accurately as possible using the provided functions.'
+          value: 'You are a helpful travel agent who can assist with many travel-related inquiries, including:\n- Reading travel documents and putting together itineraries\n- Viewing and interpreting pictures that may be in different languages\n- Locating landmarks and suggesting places to visit\n- Budgeting and graphing cost information\n- Looking up information on the web for up to date information\nYou should do your best to respond to travel-related questions, but politely decline to help with unrelated questions.\nAny time the information you want to provide requires up-to-date sources - for example, hotels, restaurants and more - you should use the Bing Search tool and provide sources.'
         }
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
@@ -209,38 +209,38 @@ resource backend 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
-resource backendAppPrivateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = if (publicNetworkAccess == 'Disabled') {
-  name: 'pl-${appServiceName}'
-  location: location
-  tags: tags
-  properties: {
-    subnet: {
-      id: privateEndpointSubnetId
-    }
-    privateLinkServiceConnections: [
-      {
-        name: 'private-endpoint-connection'
-        properties: {
-          privateLinkServiceId: backend.id
-          groupIds: ['sites']
-        }
-      }
-    ]
-  }
-  resource privateDnsZoneGroup 'privateDnsZoneGroups' = {
-    name: 'zg-${appServiceName}'
-    properties: {
-      privateDnsZoneConfigs: [
-        {
-          name: 'default'
-          properties: {
-            privateDnsZoneId: privateDnsZoneId
-          }
-        }
-      ]
-    }
-  }
-}
+// resource backendAppPrivateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = if (publicNetworkAccess == 'Disabled') {
+//   name: 'pl-${appServiceName}'
+//   location: location
+//   tags: tags
+//   properties: {
+//     subnet: {
+//       id: privateEndpointSubnetId
+//     }
+//     privateLinkServiceConnections: [
+//       {
+//         name: 'private-endpoint-connection'
+//         properties: {
+//           privateLinkServiceId: backend.id
+//           groupIds: ['sites']
+//         }
+//       }
+//     ]
+//   }
+//   resource privateDnsZoneGroup 'privateDnsZoneGroups' = {
+//     name: 'zg-${appServiceName}'
+//     properties: {
+//       privateDnsZoneConfigs: [
+//         {
+//           name: 'default'
+//           properties: {
+//             privateDnsZoneId: privateDnsZoneId
+//           }
+//         }
+//       ]
+//     }
+//   }
+// }
 
 output backendAppName string = backend.name
 output backendHostName string = backend.properties.defaultHostName

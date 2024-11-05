@@ -295,5 +295,6 @@ output AI_SERVICES_ENDPOINT string = m_aiservices.outputs.aiServicesEndpoint
 output BACKEND_APP_NAME string = m_app.outputs.backendAppName
 output BACKEND_APP_HOSTNAME string = m_app.outputs.backendHostName
 output BOT_NAME string = m_bot.outputs.name
+output MSI_PRINCIPAL_ID string = m_msi.outputs.msiPrincipalID
 output ENABLE_AUTH bool = enableAuthentication
 output AUTH_MODE string = authMode
