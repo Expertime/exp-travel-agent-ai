@@ -53,13 +53,13 @@ param appName string = ''
 param enableAuthentication bool
 
 @description('Gen AI model name and version to deploy')
-@allowed(['gpt-4,1106-Preview', 'gpt-4,0125-Preview', 'gpt-4o,2024-05-13', 'gpt-4o-mini,2024-07-18'])
+@allowed(['gpt-4;1106-Preview', 'gpt-4;0125-Preview', 'gpt-4o;2024-05-13', 'gpt-4o-mini;2024-07-18'])
 param model string
 @description('Tokens per minute capacity for the model. Units of 1000 (capacity = 10 means 10,000 tokens per minute)')
 param modelCapacity int
 
-var modelName = split(model, ',')[0]
-var modelVersion = split(model, ',')[1]
+var modelName = split(model, ';')[0]
+var modelVersion = split(model, ';')[1]
 
 var abbrs = loadJsonContent('abbreviations.json')
 var uniqueSuffix = substring(uniqueString(subscription().id, environmentName), 1, 3)
