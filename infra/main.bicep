@@ -279,6 +279,7 @@ module m_bot 'modules/botservice.bicep' = {
   params: {
     location: 'global'
     botServiceName: names.bot
+    keyVaultName: names.keyVault
     tags: tags
     endpoint: 'https://${m_app.outputs.backendHostName}/api/messages'
     msiClientID: m_msi.outputs.msiClientID
