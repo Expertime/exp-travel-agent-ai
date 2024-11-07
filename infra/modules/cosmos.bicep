@@ -8,6 +8,7 @@ param grantAccessTo array = []
 param allowedIpAddresses array = []
 param authMode string
 
+@description('Cosmos DB Account to host agent chat history')
 resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
   name: cosmosName
   location: location
