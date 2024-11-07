@@ -35,6 +35,12 @@ param appSubnetAddressPrefix string = '10.0.1.0/24'
 // AI Services configurations
 @description('Name of the AI Services account. Automatically generated if left blank')
 param aiServicesName string = ''
+@description('Name of the AI Hub resource. Automatically generated if left blank')
+param aiHubName string = ''
+@description('Name of the Storage Account. Automatically generated if left blank')
+param storageName string = ''
+@description('Name of the Key Vault. Automatically generated if left blank')
+param keyVaultName string = ''
 @description('Name of the Bing account. Automatically generated if left blank')
 param bingName string = ''
 @description('Name of the Bot Service. Automatically generated if left blank')
@@ -51,6 +57,10 @@ param appPlanName string = ''
 param appName string = ''
 @description('Whether to enable authentication (requires Entra App Developer role)')
 param enableAuthentication bool
+@description('Whether to deploy an AI Hub')
+param deployAIHub bool = true
+@description('Whether to deploy a sample AI Project')
+param deployAIProject bool = true
 
 @description('Gen AI model name and version to deploy')
 @allowed(['gpt-4,1106-Preview', 'gpt-4,0125-Preview', 'gpt-4o,2024-05-13', 'gpt-4o-mini,2024-07-18'])
@@ -70,20 +80,17 @@ var names = {
   dnsResourceGroup: !empty(dnsResourceGroupName) ? dnsResourceGroupName : '${abbrs.resourcesResourceGroups}dns'
   msi: !empty(msiName) ? msiName : '${abbrs.managedIdentityUserAssignedIdentities}${environmentName}-${uniqueSuffix}'
   cosmos: !empty(cosmosName) ? cosmosName : '${abbrs.documentDBDatabaseAccounts}${environmentName}-${uniqueSuffix}'
-  appPlan: !empty(appPlanName)
-    ? appPlanName
-    : '${abbrs.webSitesAppServiceEnvironment}${environmentName}-${uniqueSuffix}'
+  appPlan: !empty(appPlanName) ? appPlanName : '${abbrs.webSitesAppServiceEnvironment}${environmentName}-${uniqueSuffix}'
   app: !empty(appName) ? appName : '${abbrs.webSitesAppService}${environmentName}-${uniqueSuffix}'
   bot: !empty(botName) ? botName : '${abbrs.cognitiveServicesBot}${environmentName}-${uniqueSuffix}'
   vnet: '${abbrs.networkVirtualNetworks}${environmentName}-${uniqueSuffix}'
   privateLinkSubnet: '${abbrs.networkVirtualNetworksSubnets}${environmentName}-pl-${uniqueSuffix}'
   appSubnet: '${abbrs.networkVirtualNetworksSubnets}${environmentName}-app-${uniqueSuffix}'
-  aiServices: !empty(aiServicesName)
-    ? aiServicesName
-    : '${abbrs.cognitiveServicesAccounts}${environmentName}-${uniqueSuffix}'
-  bing: !empty(bingName)
-    ? bingName
-    : '${abbrs.cognitiveServicesBing}${environmentName}-${uniqueSuffix}'
+  aiServices: !empty(aiServicesName) ? aiServicesName : '${abbrs.cognitiveServicesAccounts}${environmentName}-${uniqueSuffix}'
+  aiHub: !empty(aiHubName) ? aiHubName : '${abbrs.cognitiveServicesAccounts}hub-${environmentName}-${uniqueSuffix}'
+  storage: !empty(storageName) ? storageName : replace(replace('${abbrs.storageStorageAccounts}${environmentName}${uniqueSuffix}', '-', ''), '_', '')
+  keyVault: !empty(keyVaultName) ? keyVaultName : '${abbrs.keyVaultVaults}${environmentName}-${uniqueSuffix}'
+  bing: !empty(bingName) ? bingName : '${abbrs.cognitiveServicesBing}${environmentName}-${uniqueSuffix}'
 }
 
 // Private Network Resources
@@ -176,6 +183,67 @@ module m_aiservices 'modules/aistudio/aiservices.bicep' = {
         ]
       : []
     allowedIpAddresses: allowedIpAddressesArray
+    tags: tags
+  }
+}
+
+// Storage and Key Vault
+module m_storage 'modules/aistudio/storage.bicep' = {
+  name: 'deploy_storage'
+  scope: resourceGroup
+  params: {
+    location: location
+    storageName: names.storage
+    publicNetworkAccess: publicNetworkAccess
+    authMode: authMode
+    privateEndpointSubnetId: privateEndpointSubnetId
+    privateDnsZoneId: dnsZoneIds[2]
+    grantAccessTo: authMode == 'identity'
+      ? [
+          {
+            id: myPrincipalId
+            type: myPrincipalType
+          }
+          {
+            id: m_msi.outputs.msiPrincipalID
+            type: 'ServicePrincipal'
+          }
+        ]
+      : []
+    tags: tags
+  }
+}
+
+module m_keyVault 'modules/aistudio/keyVault.bicep' = {
+  name: 'deploy_keyVault'
+  scope: resourceGroup
+  params: {
+    location: location
+    keyVaultName: names.keyVault
+    publicNetworkAccess: publicNetworkAccess
+    privateEndpointSubnetId: privateEndpointSubnetId
+    privateDnsZoneId: dnsZoneIds[3]
+    tags: tags
+  }
+}
+
+// AI Hub module - deploys AI Hub and Project
+module m_aihub 'modules/aistudio/aihub.bicep' = if (deployAIHub) {
+  name: 'deploy_ai'
+  scope: resourceGroup
+  params: {
+    location: location
+    aiHubName: names.aiHub
+    aiProjectName: 'cog-ai-prj-${environmentName}-${uniqueSuffix}'
+    aiServicesName: m_aiservices.outputs.aiServicesName
+    keyVaultName: m_keyVault.outputs.keyVaultName
+    storageName: names.storage
+    publicNetworkAccess: publicNetworkAccess
+    systemDatastoresAuthMode: authMode
+    privateEndpointSubnetId: privateEndpointSubnetId
+    apiPrivateDnsZoneId: dnsZoneIds[6]
+    notebookPrivateDnsZoneId: dnsZoneIds[7]
+    deployAIProject: deployAIProject
     tags: tags
   }
 }
