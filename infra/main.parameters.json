@@ -6,7 +6,7 @@
       "value": "rg-${AZURE_ENV_NAME}"
     },
     "environmentName": {
-      "value": "FOOBAR"
+      "value": "${AZURE_ENV_NAME}"
     },
     "location": {
       "value": "${AZURE_LOCATION}"
