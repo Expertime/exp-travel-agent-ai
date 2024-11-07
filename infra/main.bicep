@@ -9,7 +9,7 @@ param myPrincipalId string
 @allowed(['User', 'ServicePrincipal'])
 param myPrincipalType string
 @description('IP addresses to grant access to the AI services. Leave empty to skip')
-param allowedIpAddresses string
+param allowedIpAddresses string = ''
 var allowedIpAddressesArray = !empty(allowedIpAddresses) ? split(allowedIpAddresses, ',') : []
 @description('Resource group name for the AI services. Defauts to rg-<environmentName>')
 param resourceGroupName string = ''
