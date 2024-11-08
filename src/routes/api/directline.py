@@ -11,7 +11,7 @@ def directline_routes():
     async def get_directline_token(req: Request) -> Response:
         user_id = f"dl_{os.urandom(16).hex()}"
         headers = {
-            "Authorization": f"Bearer {os.getenv('DIRECT_LINE_SECRET')}",
+            "Authorization": f"Bearer {os.getenv('AZURE_DIRECT_LINE_SECRET')}",
             "Content-type": "application/json"
         }
         body = {

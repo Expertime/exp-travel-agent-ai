@@ -1,5 +1,6 @@
 param location string
 param bingName string
+param keyVaultName string
 param tags object = {}
 // param privateEndpointSubnetId string
 // param publicNetworkAccess string
@@ -8,6 +9,16 @@ param tags object = {}
 // param allowedIpAddresses array = []
 // param authMode string
 
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
+  
+  resource secret 'secrets' = {
+    name: 'BING-API-KEY'
+    properties: {
+      value: bing.listKeys().key1
+    }
+  }
+}
 resource bing 'Microsoft.Bing/accounts@2020-06-10' = {
   name: bingName
   location: 'global'

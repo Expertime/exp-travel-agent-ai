@@ -84,7 +84,7 @@ if os.getenv("AZURE_COSMOSDB_ENDPOINT"):
             auth_key=os.getenv("AZURE_COSMOSDB_AUTH_KEY"),
         )
     )
-    # storage.client = CosmosClient(os.getenv("AZURE_COSMOSDB_ENDPOINT"), auth=credential)
+    storage.client = CosmosClient(os.getenv("AZURE_COSMOSDB_ENDPOINT"), auth=credential)
 else:
     storage = MemoryStorage()
 
@@ -104,7 +104,7 @@ options = {
     "tools": [
         *CodeInterpreterTool().definitions,
         *FileSearchTool().definitions,
-        *BingGroundingTool(connection_id=os.getenv("AZURE_BING_CONNECTION_ID")).definitions
+        # *BingGroundingTool(connection_id=os.getenv("AZURE_BING_CONNECTION_ID")).definitions
     ],
     "headers": {"x-ms-enable-preview": "true"}
 }

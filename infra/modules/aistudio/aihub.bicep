@@ -17,6 +17,7 @@ param systemDatastoresAuthMode string
 param privateEndpointSubnetId string
 param apiPrivateDnsZoneId string
 param notebookPrivateDnsZoneId string
+param grantAccessTo array
 param defaultComputeName string = ''
 param deployAIProject bool
 
@@ -156,7 +157,26 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = if (p
   }
 }
 
+resource aiDeveloper 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '64702f94-c441-49e6-a78b-ef80e0188fee'
+}
+
+resource aiDeveloperAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = [
+  for principal in grantAccessTo: if (!empty(principal.id)) {
+    name: guid(principal.id, keyVault.id, aiDeveloper.id)
+    scope: aiProject
+    properties: {
+      roleDefinitionId: aiDeveloper.id
+      principalId: principal.id
+      principalType: principal.type
+    }
+  }
+]
+
+
 output aiHubID string = aiHub.id
 output aiHubName string = aiHub.name
 output aiProjectID string = aiProject.id
 output aiProjectName string = aiProject.name
+output aiProjectDiscoveryUrl string = aiProject.properties.discoveryUrl
+output aiProjectConnectionString string = '${split(aiProject.properties.discoveryUrl, '/')[2]};${subscription().subscriptionId};${resourceGroup().name};${aiHubName}'

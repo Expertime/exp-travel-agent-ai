@@ -10,17 +10,6 @@ param tags object = {}
 param publicNetworkAccess string
 
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
-  name: keyVaultName
-  
-  resource secret 'secrets' = {
-    name: 'DIRECT_LINE_SECRET'
-    properties: {
-      value: botservice::directline.listChannelWithKeys().setting.extensionKey1
-    }
-  }
-}
-
 resource botservice 'Microsoft.BotService/botServices@2022-09-15' = {
   name: botServiceName
   location: location
@@ -41,12 +30,22 @@ resource botservice 'Microsoft.BotService/botServices@2022-09-15' = {
   }
 
   resource directline 'channels' = {
-    name: 'directline'
+    name: 'DirectLineChannel'
     properties: {
       channelName: 'DirectLineChannel'
     }
   }
+}
 
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
+  
+  resource secret 'secrets' = {
+    name: 'AZURE-DIRECT-LINE-SECRET'
+    properties: {
+      value: botservice::directline.listChannelWithKeys().setting.extensionKey1
+    }
+  }
 }
 
 output name string = botservice.name

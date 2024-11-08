@@ -148,7 +148,6 @@ class AssistantBot(StateManagementBot):
         activity_id = await self.send_interim_message(turn_context, "Typing...", stream_sequence, stream_id, "typing")
 
         for event in run:
-            print(event)
             event_type = event[0]
             event_data = event[1]
             if event_type == "thread.run.failed":
@@ -185,7 +184,6 @@ class AssistantBot(StateManagementBot):
                     current_message += f"![{deltaBlock.image_file.file_id}](/api/files/{deltaBlock.image_file.file_id})"
         
         messages = self.agent_client.get_messages(thread_id=conversation_data.thread_id).messages
-        print(messages)
         # Recursively process the run with the tool outputs
         if len(tool_outputs) > 0:
             new_run = self.agent_client.submit_tool_outputs_to_stream(thread_id=conversation_data.thread_id, run_id=current_run_id, tool_outputs=tool_outputs)

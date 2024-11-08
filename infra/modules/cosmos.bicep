@@ -1,5 +1,6 @@
 param location string
 param cosmosName string
+param keyVaultName string
 param tags object = {}
 param publicNetworkAccess string
 param privateEndpointSubnetId string
@@ -121,5 +122,17 @@ resource writerAccess 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@
   }
 ]
 
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
+  
+  resource secret 'secrets' = {
+    name: 'AZURE-COSMOS-AUTH-KEY'
+    properties: {
+      value: cosmos.listKeys().primaryMasterKey
+    }
+  }
+}
+
 output cosmosID string = cosmos.id
 output cosmosName string = cosmos.name
+output cosmosEndpoint string = cosmos.properties.documentEndpoint

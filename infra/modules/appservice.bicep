@@ -10,6 +10,9 @@ param deploymentName string
 param aiServicesName string
 param bingName string
 param cosmosName string
+param aiHubName string
+param aiProjectName string
+param keyVaultName string
 
 param authMode string
 param publicNetworkAccess string
@@ -39,12 +42,20 @@ resource aiServices 'Microsoft.CognitiveServices/accounts@2023-05-01' existing =
   name: aiServicesName
 }
 
+resource aiProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01-preview' existing = {
+  name: aiProjectName
+}
+
 resource bingAccount 'Microsoft.Bing/accounts@2020-06-10' existing = {
   name: bingName
 }
 
 resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' existing = {
   name: cosmosName
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
 }
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
@@ -75,7 +86,11 @@ resource backend 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: appServicePlan.id
     httpsOnly: true
     virtualNetworkSubnetId: !empty(appSubnetId) ? appSubnetId : null
+    keyVaultReferenceIdentity: msiID
+    vnetRouteAllEnabled: true
     siteConfig: {
+      keyVaultReferenceIdentity: msiID
+      vnetRouteAllEnabled: true
       httpLoggingEnabled: true
       logsDirectorySizeLimit: 35
       ipSecurityRestrictions: ipSecurityRestrictions
@@ -85,7 +100,7 @@ resource backend 'Microsoft.Web/sites@2023-12-01' = {
       http20Enabled: true
       linuxFxVersion: 'PYTHON|3.10'
       webSocketsEnabled: true
-      appCommandLine: 'gunicorn --bind 0.0.0.0 --timeout 600 app:app --worker-class aiohttp.GunicornWebWorker'
+      appCommandLine: 'gunicorn app:app'
       alwaysOn: true
       appSettings: [
         {
@@ -101,12 +116,8 @@ resource backend 'Microsoft.Web/sites@2023-12-01' = {
           value: tenant().tenantId
         }
         {
-          name: 'AZURE_CLIENT_ID'
-          value: msiClientID
-        }
-        {
-          name: 'AZURE_TENANT_ID'
-          value: tenant().tenantId
+          name: 'AZURE_AI_PROJECT_CONNECTION_STRING'
+          value: '${split(aiProject.properties.discoveryUrl, '/')[2]};${subscription().subscriptionId};${resourceGroup().name};${aiHubName}'
         }
         {
           name: 'SSO_ENABLED'
@@ -177,8 +188,12 @@ resource backend 'Microsoft.Web/sites@2023-12-01' = {
           value: 'Conversations'
         }
         {
-          name: 'AZURE_COSMOSDB_AUTH_KEY'
-          value: cosmos.listKeys().primaryMasterKey
+          name: 'AZURE_COSMOS_AUTH_KEY'
+          value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=AZURE-COSMOS-AUTH-KEY)'
+        }
+        {
+          name: 'AZURE_DIRECT_LINE_SECRET'
+          value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=AZURE-DIRECT-LINE-SECRET)'
         }
         {
           name: 'MAX_TURNS'

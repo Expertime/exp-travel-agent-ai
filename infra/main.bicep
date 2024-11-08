@@ -7,7 +7,7 @@ param environmentName string
 param myPrincipalId string
 @description('Current principal type being used')
 @allowed(['User', 'ServicePrincipal'])
-param myPrincipalType string = 'ServicePrincipal'
+param myPrincipalType string = 'User'
 @description('IP addresses to grant access to the AI services. Leave empty to skip')
 param allowedIpAddresses string = ''
 var allowedIpAddressesArray = !empty(allowedIpAddresses) ? split(allowedIpAddresses, ',') : []
@@ -223,6 +223,18 @@ module m_keyVault 'modules/aistudio/keyVault.bicep' = {
     publicNetworkAccess: publicNetworkAccess
     privateEndpointSubnetId: privateEndpointSubnetId
     privateDnsZoneId: dnsZoneIds[3]
+    grantAccessTo: authMode == 'identity'
+      ? [
+          {
+            id: myPrincipalId
+            type: myPrincipalType
+          }
+          {
+            id: m_msi.outputs.msiPrincipalID
+            type: 'ServicePrincipal'
+          }
+        ]
+      : []
     tags: tags
   }
 }
@@ -244,6 +256,18 @@ module m_aihub 'modules/aistudio/aihub.bicep' = if (deployAIHub) {
     apiPrivateDnsZoneId: dnsZoneIds[6]
     notebookPrivateDnsZoneId: dnsZoneIds[7]
     deployAIProject: deployAIProject
+    grantAccessTo: authMode == 'identity'
+      ? [
+          {
+            id: myPrincipalId
+            type: myPrincipalType
+          }
+          {
+            id: m_msi.outputs.msiPrincipalID
+            type: 'ServicePrincipal'
+          }
+        ]
+      : []
     tags: tags
   }
 }
@@ -255,6 +279,7 @@ module m_bing 'modules/bing.bicep' = {
   params: {
     location: location
     bingName: names.bing
+    keyVaultName: m_keyVault.outputs.keyVaultName
     // publicNetworkAccess: publicNetworkAccess
     // privateEndpointSubnetId: privateEndpointSubnetId
     // openAIPrivateDnsZoneId: dnsZoneIds[0]
@@ -283,13 +308,14 @@ module m_cosmos 'modules/cosmos.bicep' = {
   params: {
     location: location
     cosmosName: names.cosmos
+    keyVaultName: m_keyVault.outputs.keyVaultName
     publicNetworkAccess: publicNetworkAccess
     privateEndpointSubnetId: privateEndpointSubnetId
     privateDnsZoneId: dnsZoneIds[5]
     allowedIpAddresses: allowedIpAddressesArray
     // We need key based auth here because Bot Framework SDK doesn't support MSI auth for Cosmos DB
     // This can be changed to identity if the SDK supports it in the future
-    authMode: authMode
+    authMode: 'accessKey'
     // authMode: authMode
     grantAccessTo: authMode == 'identity'
       ? [
@@ -338,6 +364,9 @@ module m_app 'modules/appservice.bicep' = {
     deploymentName: m_gpt.outputs.modelName
     aiServicesName: m_aiservices.outputs.aiServicesName
     bingName: m_bing.outputs.bingName
+    aiHubName: m_aihub.outputs.aiHubName
+    aiProjectName: m_aihub.outputs.aiProjectName
+    keyVaultName: m_keyVault.outputs.keyVaultName
   }
 }
 
@@ -347,7 +376,7 @@ module m_bot 'modules/botservice.bicep' = {
   params: {
     location: 'global'
     botServiceName: names.bot
-    keyVaultName: names.keyVault
+    keyVaultName: m_keyVault.outputs.keyVaultName
     tags: tags
     endpoint: 'https://${m_app.outputs.backendHostName}/api/messages'
     msiClientID: m_msi.outputs.msiClientID
@@ -359,11 +388,20 @@ module m_bot 'modules/botservice.bicep' = {
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_RESOURCE_GROUP_ID string = resourceGroup.id
 output AZURE_RESOURCE_GROUP_NAME string = resourceGroup.name
-output AZURE_OPENAI_DEPLOYMENT_NAME string = m_gpt.outputs.modelName
 output AI_SERVICES_ENDPOINT string = m_aiservices.outputs.aiServicesEndpoint
 output BACKEND_APP_NAME string = m_app.outputs.backendAppName
 output BACKEND_APP_HOSTNAME string = m_app.outputs.backendHostName
-output BOT_NAME string = m_bot.outputs.name
 output MSI_PRINCIPAL_ID string = m_msi.outputs.msiPrincipalID
 output ENABLE_AUTH bool = enableAuthentication
 output AUTH_MODE string = authMode
+
+output AZURE_OPENAI_API_ENDPOINT string = m_aiservices.outputs.aiServicesEndpoint
+output AZURE_OPENAI_API_VERSION string = '2024-07-01-preview'
+output AZURE_OPENAI_ASSISTANT_NAME string = 'azure-agents-python'
+output AZURE_OPENAI_DEPLOYMENT_NAME string = m_gpt.outputs.modelName
+output AZURE_OPENAI_STREAMING bool = false
+output AZURE_AI_PROJECT_CONNECTION_STRING string = m_aihub.outputs.aiProjectConnectionString
+output AZURE_BING_CONNECTION_ID string = m_bing.outputs.bingName
+output LLM_INSTRUCTIONS string = 'Welcome to the Travel Agent Sample! You can use this chat to: <br>&ensp;- Get recommendations of places to visit and things to do;<br>&ensp;- Upload your travel bookings and generate an itinerary;<br>&ensp;- Upload pictures of signs, menus and more to get information about them;<br>&ensp;- Ask for help with budgeting a trip;<br>&ensp;- And more!<br> To upload files, use the attachment button on the left, attach a file and hit enter to upload. You will get confirmation when the file is ready to use. You will also be prompted whether you\'d like to add it to Code Interpreter or File Search. Use Code Interpreter for mathematical operations, and File Search to use the file contents as context for your question. You may skip this step for images.'
+output LLM_WELCOME_MESSAGE string = 'You are a helpful travel agent who can assist with many travel-related inquiries, including:\n- Reading travel documents and putting together itineraries\n- Viewing and interpreting pictures that may be in different languages\n- Locating landmarks and suggesting places to visit\n- Budgeting and graphing cost information\n- Looking up information on the web for up to date information\nYou should do your best to respond to travel-related questions, but politely decline to help with unrelated questions.\nAny time the information you want to provide requires up-to-date sources - for example, hotels, restaurants and more - you should use the Bing Search tool and provide sources.'
+output MAX_TURNS int = 20
