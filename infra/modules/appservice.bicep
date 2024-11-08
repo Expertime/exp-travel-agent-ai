@@ -64,7 +64,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 resource backend 'Microsoft.Web/sites@2023-12-01' = {
   name: appServiceName
   location: location
-  tags: union(tags, { 'azd-service-name': 'genai-bot-app-backend' })
+  tags: union(tags, { 'azd-service-name': 'azure-agents-app' })
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {

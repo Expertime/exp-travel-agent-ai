@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import json
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from azure.cosmos.cosmos_client import CosmosClient
 from aiohttp import web
@@ -19,6 +20,8 @@ from botbuilder.core.integration import aiohttp_error_middleware
 from botbuilder.integration.aiohttp import CloudAdapter, ConfigurationBotFrameworkAuthentication
 
 from openai import AzureOpenAI
+from azure.ai.projects import AIProjectClient
+from azure.ai.projects.models import CodeInterpreterTool, FileSearchTool, BingGroundingTool
 from dotenv import load_dotenv
 
 from dialogs import LoginDialog
@@ -34,11 +37,11 @@ from routes.static.static import static_routes
 
 load_dotenv()
 
-def create_app(adapter: CloudAdapter, bot: ActivityHandler, aoai_client: AzureOpenAI) -> web.Application:
+def create_app(adapter: CloudAdapter, bot: ActivityHandler, project_client: AIProjectClient) -> web.Application:
     app = web.Application(middlewares=[aiohttp_error_middleware])
     app.add_routes(messages_routes(adapter, bot))
     app.add_routes(directline_routes())
-    app.add_routes(file_routes(aoai_client))
+    app.add_routes(file_routes(project_client))
     app.add_routes(static_routes())
     return app
 
@@ -60,6 +63,11 @@ aoai_client = AzureOpenAI(
         credential, 
         "https://cognitiveservices.azure.com/.default"
     )
+)
+
+project_client = AIProjectClient.from_connection_string(
+    credential=credential,
+    conn_str=os.getenv("AZURE_AI_PROJECT_CONNECTION_STRING")
 )
 
 bing_client = BingClient(os.getenv("AZURE_BING_API_KEY"))
@@ -84,10 +92,50 @@ else:
 user_state = UserState(storage)
 conversation_state = ConversationState(storage)
 
-# Create the bot
 dialog = LoginDialog()
-bot = AssistantBot(conversation_state, user_state, aoai_client, os.getenv("AZURE_OPENAI_ASSISTANT_ID"), bing_client, graph_client, dialog)
-app = create_app(adapter, bot, aoai_client)
+
+# Create agent if it doesn't exist
+agents = project_client.agents.list_agents(limit=100)
+
+options = {
+    "name": os.getenv("AZURE_OPENAI_AGENT_NAME"),
+    "model": os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
+    "instructions": os.getenv("LLM_INSTRUCTIONS"),
+    "tools": [
+        *CodeInterpreterTool().definitions,
+        *FileSearchTool().definitions,
+        *BingGroundingTool(connection_id=os.getenv("AZURE_BING_CONNECTION_ID")).definitions
+    ],
+    "headers": {"x-ms-enable-preview": "true"}
+}
+
+for tool in os.listdir("tools"):
+    if tool.endswith(".json"):
+        with open(f"tools/{tool}", "r") as f:
+            options["tools"].append(json.loads(f.read()))
+
+if agents.has_more:
+    raise Exception("Too many agents")
+for agent in agents.data:
+    if agent.name == os.getenv("AZURE_OPENAI_AGENT_NAME"):
+        options["assistant_id"] = agent.id
+        agent = project_client.agents.update_agent(**options)
+        break
+if "assistant_id" not in options:
+    agent = project_client.agents.create_agent(**options)
+    options["assistant_id"] = agent.id
+
+# Create the bot
+bot = AssistantBot(
+    conversation_state, user_state, 
+    aoai_client, 
+    project_client, 
+    options["assistant_id"], 
+    bing_client, 
+    graph_client, 
+    dialog
+)
+app = create_app(adapter, bot, project_client)
 
 if __name__ == "__main__":
-    web.run_app(app, host="localhost", port=8080)
+    web.run_app(app, host="localhost", port=3978)

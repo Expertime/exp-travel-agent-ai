@@ -17,7 +17,7 @@ param systemDatastoresAuthMode string
 param privateEndpointSubnetId string
 param apiPrivateDnsZoneId string
 param notebookPrivateDnsZoneId string
-param defaultComputeName string
+param defaultComputeName string = ''
 param deployAIProject bool
 
 resource aiServices 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
@@ -90,7 +90,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-04-01-preview'
     }
   }
 
-  resource defaultCompute 'computes@2024-04-01-preview' = {
+  resource defaultCompute 'computes@2024-04-01-preview' = if (!empty(defaultComputeName)) {
     name: defaultComputeName
     location: location
     tags: tags

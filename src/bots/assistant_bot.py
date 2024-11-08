@@ -12,8 +12,7 @@ from botbuilder.schema import ChannelAccount, CardAction, ActionTypes
 from botbuilder.dialogs import Dialog
 
 from openai import AzureOpenAI
-from openai.types.beta.assistant_stream_event import ThreadMessageDelta, ThreadRunRequiresAction, ThreadRunCreated, ThreadRunFailed
-from openai.types.beta.threads import TextDeltaBlock, ImageFileDeltaBlock
+from azure.ai.projects import AIProjectClient
 
 from data_models import ConversationData, Attachment, mime_type
 from bots.state_management_bot import StateManagementBot
@@ -23,8 +22,12 @@ from services.graph import GraphClient
 class AssistantBot(StateManagementBot):
 
     def __init__(
-            self, conversation_state: ConversationState, user_state: UserState, 
-            aoai_client: AzureOpenAI, assistant_id: str, 
+            self, 
+            conversation_state: ConversationState, 
+            user_state: UserState, 
+            aoai_client: AzureOpenAI,
+            project_client: AIProjectClient,
+            agent_id: str, 
             bing_client: BingClient, 
             graph_client: GraphClient, 
             dialog: Dialog
@@ -32,14 +35,14 @@ class AssistantBot(StateManagementBot):
         super().__init__(conversation_state, user_state, dialog)
         self.aoai_client = aoai_client
         self.chat_client = aoai_client.chat
-        self.file_client = aoai_client.files
+        self.agent_client = project_client.agents
         self.bing_client = bing_client
         self.graph_client = graph_client
 
         self.deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
         self.instructions = os.getenv("LLM_INSTRUCTIONS")
         self.welcome_message = os.getenv("LLM_WELCOME_MESSAGE", "Hello and welcome to the Assistant Bot Python!")
-        self.assistant_id = assistant_id
+        self.agent_id = agent_id
         self.streaming = os.getenv("AZURE_OPENAI_STREAMING", False)
 
     async def on_members_added_activity(self, members_added: list[ChannelAccount], turn_context: TurnContext):
@@ -60,12 +63,12 @@ class AssistantBot(StateManagementBot):
 
         # Create a new thread if one does not exist
         if conversation_data.thread_id is None:
-            thread = self.aoai_client.beta.threads.create()
+            thread = self.agent_client.create_thread()
             conversation_data.thread_id = thread.id
 
         # Delete thread if user asks
         if turn_context.activity.text == 'clear':
-            self.aoai_client.beta.threads.delete(conversation_data.thread_id)
+            self.agent_client.delete_thread(conversation_data.thread_id)
             conversation_data.thread_id = None
             conversation_data.attachments = []
             conversation_data.history = []
@@ -89,7 +92,7 @@ class AssistantBot(StateManagementBot):
             with urllib.request.urlopen(attachment.url) as f:
                 bytes = io.BytesIO(f.read())
                 bytes.name = attachment.name
-            file_response = self.file_client.create(file=bytes, purpose="assistants")
+            file_response = self.agent_client.upload_file(file=bytes, purpose="assistants")
             # Send the file to the assistant
             tools = []
             if tool == "Code Interpreter":
@@ -100,7 +103,7 @@ class AssistantBot(StateManagementBot):
                 tools.append({
                     "type": "file_search"
                 })
-            self.aoai_client.beta.threads.messages.create(
+            self.agent_client.create_message(
                 thread_id=conversation_data.thread_id,
                 role="user",
                 content=f"File uploaded: {attachment.name}",
@@ -117,18 +120,17 @@ class AssistantBot(StateManagementBot):
         conversation_data.add_turn("user", turn_context.activity.text)
         
         # Send user message to thread
-        self.aoai_client.beta.threads.messages.create(
+        self.agent_client.create_message(
             thread_id=conversation_data.thread_id, 
             role="user", 
             content=turn_context.activity.text
         )
         
         # Run thread
-        run = self.aoai_client.beta.threads.runs.create(
+        run = self.agent_client.create_stream(
             thread_id=conversation_data.thread_id,
-            assistant_id=self.assistant_id,
-            instructions=self.instructions,
-            stream=True
+            assistant_id=self.agent_id,
+            instructions=self.instructions
         )
 
         # Process run streaming
@@ -146,13 +148,16 @@ class AssistantBot(StateManagementBot):
         activity_id = await self.send_interim_message(turn_context, "Typing...", stream_sequence, stream_id, "typing")
 
         for event in run:
-            if type(event) == ThreadRunFailed:
-                current_message = event.data.last_error.message
+            print(event)
+            event_type = event[0]
+            event_data = event[1]
+            if event_type == "thread.run.failed":
+                current_message = event_data.last_error.message
                 break
-            if type(event) == ThreadRunCreated:
-                current_run_id = event.data.id
-            if type(event) == ThreadRunRequiresAction:
-                tool_calls = event.data.required_action.submit_tool_outputs.tool_calls
+            if event_type == "thread.run.created":
+                current_run_id = event_data.id
+            if event_type == "thread.run.requires_action":
+                tool_calls = event_data.required_action.submit_tool_outputs.tool_calls
                 for tool_call in tool_calls:
                     arguments = json.loads(tool_call.function.arguments)
                     if tool_call.function.name == "image_query":
@@ -167,21 +172,23 @@ class AssistantBot(StateManagementBot):
                     else:
                         tool_outputs.append({"tool_call_id": tool_call.id, "output": "Tool not found"})
 
-            if type(event) == ThreadMessageDelta:
-                deltaBlock = event.data.delta.content[0]
-                if type(deltaBlock) == TextDeltaBlock:
+            if event_type == "thread.message.delta":
+                deltaBlock = event_data.delta.content[0]
+                if deltaBlock.type == "text":
                     current_message += deltaBlock.text.value
                     stream_sequence += 1
                     # Flush content every 50 messages
                     if (stream_sequence % 50 == 0):
                         await self.send_interim_message(turn_context, current_message, stream_sequence, activity_id, "typing")
 
-                elif type(deltaBlock) == ImageFileDeltaBlock: 
+                elif deltaBlock.type == "image_file":
                     current_message += f"![{deltaBlock.image_file.file_id}](/api/files/{deltaBlock.image_file.file_id})"
         
+        messages = self.agent_client.get_messages(thread_id=conversation_data.thread_id).messages
+        print(messages)
         # Recursively process the run with the tool outputs
         if len(tool_outputs) > 0:
-            new_run = self.aoai_client.beta.threads.runs.submit_tool_outputs(thread_id=conversation_data.thread_id, run_id=current_run_id, tool_outputs=tool_outputs, stream=True)
+            new_run = self.agent_client.submit_tool_outputs_to_stream(thread_id=conversation_data.thread_id, run_id=current_run_id, tool_outputs=tool_outputs)
             await self.process_run_streaming(new_run, conversation_data, turn_context, activity_id)
             return
         response = current_message
@@ -216,7 +223,7 @@ class AssistantBot(StateManagementBot):
                 # Add file upload notice to conversation history, frontend, and assistant
                 conversation_data.add_turn("user", f"File uploaded: {attachment.name}")
                 await turn_context.send_activity(MessageFactory.text(f"File uploaded: {attachment.name}"))
-                self.aoai_client.beta.threads.messages.create(thread_id=thread_id,role="user",content=f"File uploaded: {attachment.name}",)
+                self.agent_client.create_message(thread_id=thread_id,role="user",content=f"File uploaded: {attachment.name}",)
                 # Ask whether to add file to a tool
                 await turn_context.send_activity(MessageFactory.suggested_actions(
                     [
