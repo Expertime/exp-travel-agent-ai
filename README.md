@@ -21,8 +21,8 @@ To get started with the Azure Agents Travel Assistant, follow the instructions b
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/yourusername/azure-agents-travel-assistant.git
-    cd azure-agents-travel-assistant
+    git clone https://github.com/MarcoABCardoso/azure-agents-python
+    cd azure-agents-python
     ```
 
 2. Deploy the infrastructure and sample app
