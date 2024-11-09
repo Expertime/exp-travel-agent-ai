@@ -15,8 +15,7 @@ To get started with the Azure Agents Travel Assistant, follow the instructions b
 ### Prerequisites
 
 - An Azure subscription
-- Python 3.7 or later
-- Azure Cognitive Services API keys
+- Python 3.10 or later (for running locally)
 
 ### Installation
 
@@ -26,26 +25,15 @@ To get started with the Azure Agents Travel Assistant, follow the instructions b
     cd azure-agents-travel-assistant
     ```
 
-2. Install the required Python packages:
+2. Deploy the infrastructure and sample app
     ```sh
-    pip install -r requirements.txt
+    azd up
     ```
 
-3. Set up your Azure Cognitive Services keys:
+3. (Optional) Run locally:
     ```sh
-    export AZURE_COGNITIVE_SERVICES_KEY=<your_key>
-    export AZURE_COGNITIVE_SERVICES_ENDPOINT=<your_endpoint>
+    python src/app.py
     ```
-
-### Running the Sample
-
-Run the travel assistant application:
-```sh
-python travel_assistant.py
-```
-
-For detailed instructions and additional configuration options, refer to the [documentation](docs/README.md).
-
 
 ## How to Contribute
 
