@@ -15,5 +15,3 @@ appsettings.json
 
 .pytest_cache
 .coverage
-
-*.whl

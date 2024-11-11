@@ -32,7 +32,9 @@ To get started with the Azure Agents Travel Assistant, follow the instructions b
 
 3. (Optional) Run locally:
     ```sh
-    python src/app.py
+    cd src
+    pip install -r requirements.txt
+    python app.py
     ```
 
 ## Features
