@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from botbuilder.core import ConversationState, UserState, MemoryStorage, TurnContext
 from botbuilder.schema import Attachment as BotAttachment, ChannelAccount
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from azure.ai.projects import AIProjectClient
 from openai import AzureOpenAI
 
 from bots import AssistantBot
@@ -14,13 +15,14 @@ from dialogs import LoginDialog
 from data_models import Attachment
 
 current_directory = os.path.dirname(__file__)
+credential = DefaultAzureCredential(managed_identity_client_id=os.getenv("MicrosoftAppId"))
+
 @pytest.fixture()
 async def turn_context():
     return MagicMock(spec=TurnContext)
 
 @pytest.fixture()
 async def aoai_client():
-    credential = DefaultAzureCredential(managed_identity_client_id=os.getenv("MicrosoftAppId"))
     aoai_client = AzureOpenAI(
         api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
         azure_endpoint=os.getenv("AZURE_OPENAI_API_ENDPOINT"),
@@ -34,12 +36,21 @@ async def aoai_client():
     return aoai_client
 
 @pytest.fixture()
-async def bot(aoai_client, turn_context):
+async def project_client():
+    project_client = AIProjectClient.from_connection_string(
+        credential=credential,
+        conn_str=os.getenv("AZURE_AI_PROJECT_CONNECTION_STRING")
+    )
+    return project_client
+
+@pytest.fixture()
+async def bot(aoai_client, project_client, turn_context):
     _bot = AssistantBot(
         conversation_state=ConversationState(MemoryStorage()),
         user_state=UserState(MemoryStorage()),
         aoai_client=aoai_client,
-        assistant_id=os.getenv("AZURE_OPENAI_ASSISTANT_ID"),
+        project_client=project_client,
+        agent_id=os.getenv("AZURE_OPENAI_ASSISTANT_ID"),
         bing_client=BingClient(os.getenv("AZURE_BING_API_KEY")),
         graph_client=GraphClient(),
         dialog=LoginDialog()

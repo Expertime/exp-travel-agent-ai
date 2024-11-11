@@ -118,7 +118,6 @@ for tool in os.listdir("tools"):
     if tool.endswith(".json"):
         with open(f"tools/{tool}", "r") as f:
             options["tools"].append(json.loads(f.read()))
-
 if agents.has_more:
     raise Exception("Too many agents")
 for agent in agents.data:
