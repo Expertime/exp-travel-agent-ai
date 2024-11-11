@@ -35,6 +35,36 @@ To get started with the Azure Agents Travel Assistant, follow the instructions b
     python src/app.py
     ```
 
+## Features
+
+- **Widely available travel knowledge**: Ask about well-known destinations and tourist attractions
+- **Document Upload**: Upload PDF, Word and other document formats and add to File Search to use the information contained as part of the conversation
+- **Image Upload**: Upload images and ask questions about the location, landmark or directions
+- **Web search**: The Agent may use Bing Search to obtain updated information about certain locations, accomodations, weather and more.
+
+## Guidance
+
+### Regional Availablility
+
+You may deploy this solution on any regions that support Azure AI Agents. Some components, such as Bot Service and Bing Search, are deployed in a global model, and as such are not tied to a single region. Make sure to review Data Residency requirements.
+
+- [Regionalization in Azure AI Bot Service] https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-regionalization?view=azure-bot-service-4.0
+
+### Model Support
+
+This quickstart supports both GPT-4o and GPT-4o-mini. Ohter models may also perform well depending on question complexity. Standard deployments are used by default, but you may update them to Global Standard or Provisioned SKUs after successfully deploying the solution.
+
+### Troubleshooting
+
+- `Message: Invalid subscription ID`: Your subscription may not be enabled for Azure AI Agents. During the preview of this functionality, it may be required to complete additional steps to onboard your subscription to Azure AI Agents. Alternatively, update the .env file (locally) or app service environment variables (on Azure) to point the application to another AI Project.
+- `azure.core.exceptions.HttpResponseError: Operation returned an invalid status 'Forbidden'`: Your current user does not have Azure ML Data Scientist role, or your IP is not allowed to access the Azure AI Hub. Review the RBAC and networking configurations of your AI Hub/Project.
+
+## Resources
+
+- [Getting started with Azure OpenAI Assistants (Preview)](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/assistant)
+- [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/overview)
+- [Generative AI For Beginners](https://github.com/microsoft/generative-ai-for-beginners)
+
 ## How to Contribute
 
 This project welcomes contributions and suggestions. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit <https://cla.opensource.microsoft.com>

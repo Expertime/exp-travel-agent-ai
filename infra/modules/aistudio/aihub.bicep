@@ -18,6 +18,7 @@ param privateEndpointSubnetId string
 param apiPrivateDnsZoneId string
 param notebookPrivateDnsZoneId string
 param grantAccessTo array
+param allowedIpAddresses array = []
 param defaultComputeName string = ''
 param deployAIProject bool
 
@@ -43,6 +44,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-04-01-preview'
   }
   properties: {
     publicNetworkAccess: publicNetworkAccess
+    ipAllowlist: allowedIpAddresses
     managedNetwork: {
       isolationMode: publicNetworkAccess == 'Disabled' ? 'AllowOnlyApprovedOutbound' : 'Disabled'
       outboundRules: publicNetworkAccess == 'Disabled' && !empty(search.name)
