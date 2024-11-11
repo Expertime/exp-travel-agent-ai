@@ -57,10 +57,9 @@ jobs:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Provision Infrastructure
-        run: azd env set --no-prompt ALLOWED_IP_ADDRESSES $(dig +short myip.opendns.com @resolver1.opendns.com -4) && azd provision --no-prompt
+        run: azd provision --no-prompt
         env:
           AZD_INITIAL_ENVIRONMENT_CONFIG: ${{ secrets.AZD_INITIAL_ENVIRONMENT_CONFIG }}
-          CLIENT_ID: ${{ env.AZURE_CLIENT_ID }}
 
       - name: Deploy Application
         run: azd deploy --no-prompt
