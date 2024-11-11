@@ -1,4 +1,4 @@
-name: Template Validation Sample Workflow
+name: Template Validation
 on: 
   workflow_dispatch:
 
@@ -10,10 +10,21 @@ permissions:
 jobs:
   template_validation_job:
     runs-on: ubuntu-latest
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
+      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
     name: template validation
     steps:
       - uses: actions/checkout@v4
-
+      - name: Install azd
+        uses: Azure/setup-azd@v1.0.0
+      - name: Set variables
+        run: azd env set --no-prompt AZURE_PRINCIPAL_TYPE ServicePrincipal
+        env:
+          AZD_INITIAL_ENVIRONMENT_CONFIG: ${{ secrets.AZD_INITIAL_ENVIRONMENT_CONFIG }}
       - uses: microsoft/template-validation-action@v0.3.2
         id: validation
         env:
