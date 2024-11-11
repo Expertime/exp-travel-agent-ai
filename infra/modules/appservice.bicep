@@ -100,7 +100,7 @@ resource backend 'Microsoft.Web/sites@2023-12-01' = {
       http20Enabled: true
       linuxFxVersion: 'PYTHON|3.10'
       webSocketsEnabled: true
-      appCommandLine: 'pip install azure_ai_projects-1.0.0b1-py3-none-any.whl && gunicorn app:app'
+      appCommandLine: 'gunicorn app:app'
       alwaysOn: true
       appSettings: [
         {

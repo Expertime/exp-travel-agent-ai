@@ -43,7 +43,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-04-01-preview'
     type: 'SystemAssigned'
   }
   properties: {
-    publicNetworkAccess: publicNetworkAccess
+    publicNetworkAccess: !empty(allowedIpAddresses) ? 'Enabled' : publicNetworkAccess
     ipAllowlist: allowedIpAddresses
     managedNetwork: {
       isolationMode: publicNetworkAccess == 'Disabled' ? 'AllowOnlyApprovedOutbound' : 'Disabled'
