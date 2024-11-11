@@ -1,8 +1,6 @@
-# Azure Agents Python Quickstart
-
 # Azure Agents Travel Assistant
 
-This repository contains a sample implementation of an Azure-based travel assistant. The travel assistant leverages Azure Cognitive Services to understand images and documents, providing assistance during travel planning and common travel situations. Key features include:
+This repository contains an end-to-end sample of a travel assistant implemented with Azure Agents Runtime and Bot Framework. The travel assistant leverages the Azure AI platform to understand images and documents, providing assistance during travel planning and common travel situations. Key features include:
 
 - **Image Recognition**: Identify landmarks, extract text from travel documents, and more.
 - **Document Understanding**: Parse itineraries, booking confirmations, and other travel-related documents.
@@ -21,8 +19,8 @@ To get started with the Azure Agents Travel Assistant, follow the instructions b
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/MarcoABCardoso/azure-agents-python
-    cd azure-agents-python
+    git clone https://github.com/Azure-Samples/azureai-travel-agent-python
+    cd azureai-travel-agent-python
     ```
 
 2. Deploy the infrastructure and sample app
@@ -41,7 +39,7 @@ To get started with the Azure Agents Travel Assistant, follow the instructions b
 
 ## Features
 
-- **Widely available travel knowledge**: Ask about well-known destinations and tourist attractions
+- **Publicly available travel knowledge**: Ask about well-known destinations and tourist attractions
 - **Document Upload**: Upload PDF, Word and other document formats and add to File Search to use the information contained as part of the conversation
 - **Image Upload**: Upload images and ask questions about the location, landmark or directions
 - **Web search**: The Agent may use Bing Search to obtain updated information about certain locations, accomodations, weather and more.
@@ -97,8 +95,3 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 ## License
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
-
-
----
-
-This project is part of the AI-in-a-Box series, aimed at providing the technical community with tools and accelerators to implement AI/ML solutions efficiently and effectively.
