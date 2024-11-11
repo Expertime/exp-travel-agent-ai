@@ -1,6 +1,7 @@
 import os
 import re
 import pytest
+from dotenv import load_dotenv
 from unittest.mock import MagicMock
 from botbuilder.core import ConversationState, UserState, MemoryStorage, TurnContext
 from botbuilder.schema import Attachment as BotAttachment, ChannelAccount
@@ -13,16 +14,18 @@ from services.bing import BingClient
 from services.graph import GraphClient
 from dialogs import LoginDialog
 from data_models import Attachment
+from utils import create_or_update_agent
 
 current_directory = os.path.dirname(__file__)
 credential = DefaultAzureCredential(managed_identity_client_id=os.getenv("MicrosoftAppId"))
+load_dotenv()
 
 @pytest.fixture()
-async def turn_context():
+async def turn_context(loop):
     return MagicMock(spec=TurnContext)
 
 @pytest.fixture()
-async def aoai_client():
+async def aoai_client(loop):
     aoai_client = AzureOpenAI(
         api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
         azure_endpoint=os.getenv("AZURE_OPENAI_API_ENDPOINT"),
@@ -35,22 +38,21 @@ async def aoai_client():
     # aoai_client = MagicMock(spec=AzureOpenAI)
     return aoai_client
 
-@pytest.fixture()
-async def project_client():
-    project_client = AIProjectClient.from_connection_string(
-        credential=credential,
-        conn_str=os.getenv("AZURE_AI_PROJECT_CONNECTION_STRING")
-    )
-    return project_client
+project_client = AIProjectClient.from_connection_string(
+    credential=credential,
+    conn_str=os.getenv("AZURE_AI_PROJECT_CONNECTION_STRING")
+)
+agents_client = project_client.agents
+agent_id = create_or_update_agent(agents_client, os.getenv("AZURE_OPENAI_AGENT_NAME"))
 
 @pytest.fixture()
-async def bot(aoai_client, project_client, turn_context):
+async def bot(aoai_client, turn_context):
     _bot = AssistantBot(
         conversation_state=ConversationState(MemoryStorage()),
         user_state=UserState(MemoryStorage()),
         aoai_client=aoai_client,
-        project_client=project_client,
-        agent_id=os.getenv("AZURE_OPENAI_ASSISTANT_ID"),
+        agents_client=agents_client,
+        agent_id=agent_id,
         bing_client=BingClient(os.getenv("AZURE_BING_API_KEY")),
         graph_client=GraphClient(),
         dialog=LoginDialog()

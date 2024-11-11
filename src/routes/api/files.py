@@ -3,14 +3,13 @@
 
 from aiohttp import web
 from aiohttp.web import Request, Response, StreamResponse
-from azure.ai.projects import AIProjectClient
+from azure.ai.projects.operations import AgentsOperations
 
 
-def file_routes(project_client: AIProjectClient):
-    agent_client = project_client.agents
+def file_routes(agents_client: AgentsOperations):
     async def get_assistant_file(req: Request) -> Response:
         file_id = req.match_info['file_id']
-        content = agent_client.get_file_content(file_id)
+        content = agents_client.get_file_content(file_id)
         response = StreamResponse()
         response.content_type = 'image/png'
         await response.prepare(req)

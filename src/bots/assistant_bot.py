@@ -7,12 +7,13 @@ import json
 import base64
 import urllib.request
 
+from azure.ai.projects.operations import AgentsOperations
+
 from botbuilder.core import ConversationState, TurnContext, UserState, MessageFactory
 from botbuilder.schema import ChannelAccount, CardAction, ActionTypes
 from botbuilder.dialogs import Dialog
 
 from openai import AzureOpenAI
-from azure.ai.projects import AIProjectClient
 
 from data_models import ConversationData, Attachment, mime_type
 from bots.state_management_bot import StateManagementBot
@@ -26,7 +27,7 @@ class AssistantBot(StateManagementBot):
             conversation_state: ConversationState, 
             user_state: UserState, 
             aoai_client: AzureOpenAI,
-            project_client: AIProjectClient,
+            agents_client: AgentsOperations,
             agent_id: str, 
             bing_client: BingClient, 
             graph_client: GraphClient, 
@@ -35,7 +36,7 @@ class AssistantBot(StateManagementBot):
         super().__init__(conversation_state, user_state, dialog)
         self.aoai_client = aoai_client
         self.chat_client = aoai_client.chat
-        self.agent_client = project_client.agents
+        self.agents_client = agents_client
         self.bing_client = bing_client
         self.graph_client = graph_client
 
@@ -63,12 +64,12 @@ class AssistantBot(StateManagementBot):
 
         # Create a new thread if one does not exist
         if conversation_data.thread_id is None:
-            thread = self.agent_client.create_thread()
+            thread = self.agents_client.create_thread()
             conversation_data.thread_id = thread.id
 
         # Delete thread if user asks
         if turn_context.activity.text == 'clear':
-            self.agent_client.delete_thread(conversation_data.thread_id)
+            self.agents_client.delete_thread(conversation_data.thread_id)
             conversation_data.thread_id = None
             conversation_data.attachments = []
             conversation_data.history = []
@@ -92,7 +93,7 @@ class AssistantBot(StateManagementBot):
             with urllib.request.urlopen(attachment.url) as f:
                 bytes = io.BytesIO(f.read())
                 bytes.name = attachment.name
-            file_response = self.agent_client.upload_file(file=bytes, purpose="assistants")
+            file_response = self.agents_client.upload_file(file=bytes, purpose="assistants")
             # Send the file to the assistant
             tools = []
             if tool == "Code Interpreter":
@@ -103,7 +104,7 @@ class AssistantBot(StateManagementBot):
                 tools.append({
                     "type": "file_search"
                 })
-            self.agent_client.create_message(
+            self.agents_client.create_message(
                 thread_id=conversation_data.thread_id,
                 role="user",
                 content=f"File uploaded: {attachment.name}",
@@ -120,14 +121,14 @@ class AssistantBot(StateManagementBot):
         conversation_data.add_turn("user", turn_context.activity.text)
         
         # Send user message to thread
-        self.agent_client.create_message(
+        self.agents_client.create_message(
             thread_id=conversation_data.thread_id, 
             role="user", 
             content=turn_context.activity.text
         )
         
         # Run thread
-        run = self.agent_client.create_stream(
+        run = self.agents_client.create_stream(
             thread_id=conversation_data.thread_id,
             assistant_id=self.agent_id,
             instructions=self.instructions
@@ -183,10 +184,10 @@ class AssistantBot(StateManagementBot):
                 elif deltaBlock.type == "image_file":
                     current_message += f"![{deltaBlock.image_file.file_id}](/api/files/{deltaBlock.image_file.file_id})"
         
-        messages = self.agent_client.get_messages(thread_id=conversation_data.thread_id).messages
+        messages = self.agents_client.get_messages(thread_id=conversation_data.thread_id).messages
         # Recursively process the run with the tool outputs
         if len(tool_outputs) > 0:
-            new_run = self.agent_client.submit_tool_outputs_to_stream(thread_id=conversation_data.thread_id, run_id=current_run_id, tool_outputs=tool_outputs)
+            new_run = self.agents_client.submit_tool_outputs_to_stream(thread_id=conversation_data.thread_id, run_id=current_run_id, tool_outputs=tool_outputs)
             await self.process_run_streaming(new_run, conversation_data, turn_context, activity_id)
             return
         response = current_message
@@ -221,7 +222,7 @@ class AssistantBot(StateManagementBot):
                 # Add file upload notice to conversation history, frontend, and assistant
                 conversation_data.add_turn("user", f"File uploaded: {attachment.name}")
                 await turn_context.send_activity(MessageFactory.text(f"File uploaded: {attachment.name}"))
-                self.agent_client.create_message(thread_id=thread_id,role="user",content=f"File uploaded: {attachment.name}",)
+                self.agents_client.create_message(thread_id=thread_id,role="user",content=f"File uploaded: {attachment.name}",)
                 # Ask whether to add file to a tool
                 await turn_context.send_activity(MessageFactory.suggested_actions(
                     [

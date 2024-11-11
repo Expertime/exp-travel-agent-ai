@@ -2,7 +2,8 @@ import pytest
 from unittest.mock import MagicMock
 from botbuilder.integration.aiohttp import CloudAdapter, ConfigurationBotFrameworkAuthentication
 from botbuilder.core import TurnContext
-from openai import AzureOpenAI
+from azure.keyvault.secrets import SecretClient
+from azure.ai.projects.operations import AgentsOperations
 
 from config import DefaultConfig
 from bots import AssistantBot
@@ -12,11 +13,12 @@ from app import create_app
 config = DefaultConfig()
 adapter = CloudAdapter(ConfigurationBotFrameworkAuthentication(config))
 bot = MagicMock(spec=AssistantBot)
-aoai_client = MagicMock(spec=AzureOpenAI)
+agents_client = MagicMock(spec=AgentsOperations)
+secrets_client = MagicMock(spec=SecretClient)
 @pytest.fixture()
 async def client(aiohttp_client):
     bot.reset_mock()
-    return await aiohttp_client(create_app(adapter, bot, aoai_client))
+    return await aiohttp_client(create_app(adapter, bot, agents_client, secrets_client))
 
 async def test_welcome_message(client):
     bot.configure_mock(**{"on_turn.return_value": "Mock Response"})

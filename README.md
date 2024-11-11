@@ -63,6 +63,17 @@ This quickstart supports both GPT-4o and GPT-4o-mini. Ohter models may also perf
 - `Message: Invalid subscription ID`: Your subscription may not be enabled for Azure AI Agents. During the preview of this functionality, it may be required to complete additional steps to onboard your subscription to Azure AI Agents. Alternatively, update the .env file (locally) or app service environment variables (on Azure) to point the application to another AI Project.
 - `azure.core.exceptions.HttpResponseError: Operation returned an invalid status 'Forbidden'`: Your current user does not have Azure ML Data Scientist role, or your IP is not allowed to access the Azure AI Hub. Review the RBAC and networking configurations of your AI Hub/Project.
 
+## Security
+
+Most of the resources deployed in this template leverage Private Endpoints and Entra ID authentication for enhanced security. Make sure to use the corresponding parameters to use these features.
+
+There are two exceptions to this pattern in this repository:
+
+- Bot Service does not support Entra ID authentication for the Direct Line / Web channel.
+- The Bot Framework SDK for Python does not support Entra ID authentication for the Cosmos DB connector.
+
+For this reason, both services utilize API Keys, properly stored in the Key Vault deployed with the quickstart.
+
 ## Resources
 
 - [Getting started with Azure OpenAI Assistants (Preview)](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/assistant)

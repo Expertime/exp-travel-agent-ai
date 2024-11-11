@@ -98,7 +98,7 @@ var dnsZones = [
   'privatelink.openai.azure.com'
   'privatelink.cognitiveservices.azure.com'
   'privatelink.blob.${environment().suffixes.storage}'
-  'privatelink.vault.azure.com'
+  'privatelink.vaultcore.azure.net'
   'privatelink.search.azure.com'
   'privatelink.documents.azure.com'
   'privatelink.api.azureml.ms'
