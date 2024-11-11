@@ -37,6 +37,8 @@ To get started with the Azure Agents Travel Assistant, follow the instructions b
     python app.py
     ```
 
+4. (Optional) Open http://localhost:3978/api/messages in the [Bot Framework Emulator](https://github.com/microsoft/BotFramework-Emulator)
+
 ## Features
 
 - **Widely available travel knowledge**: Ask about well-known destinations and tourist attractions

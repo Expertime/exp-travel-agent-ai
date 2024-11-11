@@ -18,10 +18,10 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enabledForTemplateDeployment: false
     enableSoftDelete: true
     enableRbacAuthorization: true
-    publicNetworkAccess: publicNetworkAccess
+    publicNetworkAccess: empty(allowedIpAddresses) ? publicNetworkAccess : 'Enabled'
     networkAcls: {
       bypass: 'AzureServices'
-      defaultAction: empty(allowedIpAddresses) ? 'Deny' : 'Allow'
+      defaultAction: 'Deny'
       virtualNetworkRules: []
       ipRules: [
         for ipAddress in allowedIpAddresses: {

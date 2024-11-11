@@ -11,7 +11,6 @@ def directline_routes(secret_client: SecretClient):
     direct_line_secret = os.getenv('AZURE_DIRECT_LINE_SECRET', secret_client.get_secret("AZURE-DIRECT-LINE-SECRET").value)
     async def get_directline_token(req: Request) -> Response:
         user_id = f"dl_{os.urandom(16).hex()}"
-        secret = os.getenv('AZURE_DIRECT_LINE_SECRET')
         headers = {
             "Authorization": f"Bearer {direct_line_secret}",
             "Content-type": "application/json"

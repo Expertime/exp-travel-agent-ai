@@ -80,7 +80,7 @@ graph_client = GraphClient()
 # Conversation history storage
 storage = None
 if os.getenv("AZURE_COSMOSDB_ENDPOINT"):
-    auth_key=os.getenv("AZURE_COSMOSDB_AUTH_KEY", secret_client.get_secret("AZURE-COSMOSDB-AUTH-KEY").value)
+    auth_key=os.getenv("AZURE_COSMOSDB_AUTH_KEY", secret_client.get_secret("AZURE-COSMOS-AUTH-KEY").value)
     storage = CosmosDbPartitionedStorage(
         CosmosDbPartitionedConfig(
             cosmos_db_endpoint=os.getenv("AZURE_COSMOSDB_ENDPOINT"),

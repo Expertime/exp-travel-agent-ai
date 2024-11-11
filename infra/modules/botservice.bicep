@@ -43,7 +43,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   resource secret 'secrets' = {
     name: 'AZURE-DIRECT-LINE-SECRET'
     properties: {
-      value: botservice::directline.listChannelWithKeys().setting.extensionKey1
+      value: botservice::directline.listChannelWithKeys().setting.sites[0].key
     }
   }
 }
