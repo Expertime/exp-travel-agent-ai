@@ -5,6 +5,7 @@ import os
 import json
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from azure.cosmos.cosmos_client import CosmosClient
+from azure.keyvault.secrets import SecretClient
 from aiohttp import web
 from botbuilder.azure import (
     CosmosDbPartitionedStorage,
@@ -37,10 +38,10 @@ from routes.static.static import static_routes
 
 load_dotenv()
 
-def create_app(adapter: CloudAdapter, bot: ActivityHandler, project_client: AIProjectClient) -> web.Application:
+def create_app(adapter: CloudAdapter, bot: ActivityHandler, project_client: AIProjectClient, secret_client: SecretClient) -> web.Application:
     app = web.Application(middlewares=[aiohttp_error_middleware])
     app.add_routes(messages_routes(adapter, bot))
-    app.add_routes(directline_routes())
+    app.add_routes(directline_routes(secret_client))
     app.add_routes(file_routes(project_client))
     app.add_routes(static_routes())
     return app
@@ -53,6 +54,9 @@ adapter = CloudAdapter(ConfigurationBotFrameworkAuthentication(config))
 
 # Set up service authentication
 credential = DefaultAzureCredential(managed_identity_client_id=os.getenv("MicrosoftAppId"))
+
+# Key Vault
+secret_client = SecretClient(vault_url=os.getenv("AZURE_KEY_VAULT_ENDPOINT"), credential=credential)
 
 # Azure AI Services
 aoai_client = AzureOpenAI(
@@ -76,6 +80,7 @@ graph_client = GraphClient()
 # Conversation history storage
 storage = None
 if os.getenv("AZURE_COSMOSDB_ENDPOINT"):
+    auth_key=os.getenv("AZURE_COSMOSDB_AUTH_KEY", secret_client.get_secret("AZURE-COSMOSDB-AUTH-KEY").value)
     storage = CosmosDbPartitionedStorage(
         CosmosDbPartitionedConfig(
             cosmos_db_endpoint=os.getenv("AZURE_COSMOSDB_ENDPOINT"),
@@ -84,7 +89,7 @@ if os.getenv("AZURE_COSMOSDB_ENDPOINT"):
             auth_key=os.getenv("AZURE_COSMOSDB_AUTH_KEY"),
         )
     )
-    storage.client = CosmosClient(os.getenv("AZURE_COSMOSDB_ENDPOINT"), auth=credential)
+    # storage.client = CosmosClient(os.getenv("AZURE_COSMOSDB_ENDPOINT"), auth=credential)
 else:
     storage = MemoryStorage()
 
@@ -135,7 +140,7 @@ bot = AssistantBot(
     graph_client, 
     dialog
 )
-app = create_app(adapter, bot, project_client)
+app = create_app(adapter, bot, project_client, secret_client)
 
 if __name__ == "__main__":
     web.run_app(app, host="localhost", port=3978)

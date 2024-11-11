@@ -223,6 +223,7 @@ module m_keyVault 'modules/aistudio/keyVault.bicep' = {
     publicNetworkAccess: publicNetworkAccess
     privateEndpointSubnetId: privateEndpointSubnetId
     privateDnsZoneId: dnsZoneIds[3]
+    allowedIpAddresses: allowedIpAddressesArray
     grantAccessTo: authMode == 'identity'
       ? [
           {
@@ -396,6 +397,8 @@ output MSI_PRINCIPAL_ID string = m_msi.outputs.msiPrincipalID
 output ENABLE_AUTH bool = enableAuthentication
 output AUTH_MODE string = authMode
 
+output AZURE_COSMOSDB_ENDPOINT string = m_cosmos.outputs.cosmosEndpoint
+output AZURE_KEY_VAULT_ENDPOINT string = m_keyVault.outputs.keyVaultEndpoint
 output AZURE_OPENAI_API_ENDPOINT string = m_aiservices.outputs.aiServicesEndpoint
 output AZURE_OPENAI_API_VERSION string = '2024-07-01-preview'
 output AZURE_OPENAI_ASSISTANT_NAME string = 'azure-agents-python'

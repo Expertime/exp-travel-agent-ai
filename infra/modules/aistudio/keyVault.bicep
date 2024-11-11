@@ -5,6 +5,7 @@ param publicNetworkAccess string
 param privateEndpointSubnetId string
 param privateDnsZoneId string
 param grantAccessTo array
+param allowedIpAddresses array = []
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
@@ -20,7 +21,13 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     publicNetworkAccess: publicNetworkAccess
     networkAcls: {
       bypass: 'AzureServices'
-      defaultAction: 'Deny'
+      defaultAction: empty(allowedIpAddresses) ? 'Deny' : 'Allow'
+      virtualNetworkRules: []
+      ipRules: [
+        for ipAddress in allowedIpAddresses: {
+          value: ipAddress
+        }
+      ]
     }
     sku: {
       family: 'A'
@@ -82,3 +89,4 @@ resource secretsUserAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' 
 
 output keyVaultID string = keyVault.id
 output keyVaultName string = keyVault.name
+output keyVaultEndpoint string = keyVault.properties.vaultUri
