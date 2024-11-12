@@ -224,18 +224,16 @@ module m_keyVault 'modules/aistudio/keyVault.bicep' = {
     privateEndpointSubnetId: privateEndpointSubnetId
     privateDnsZoneId: dnsZoneIds[3]
     allowedIpAddresses: allowedIpAddressesArray
-    grantAccessTo: authMode == 'identity'
-      ? [
-          {
-            id: myPrincipalId
-            type: myPrincipalType
-          }
-          {
-            id: m_msi.outputs.msiPrincipalID
-            type: 'ServicePrincipal'
-          }
-        ]
-      : []
+    grantAccessTo: [
+        {
+          id: myPrincipalId
+          type: myPrincipalType
+        }
+        {
+          id: m_msi.outputs.msiPrincipalID
+          type: 'ServicePrincipal'
+        }
+      ]
     tags: tags
   }
 }
