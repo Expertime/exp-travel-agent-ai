@@ -4,12 +4,12 @@ targetScope = 'subscription'
 @description('Name of the environment')
 param environmentName string
 @description('Principal ID to grant access to the AI services. Leave empty to skip')
-param myPrincipalId string
+param myPrincipalId string = ''
 @description('Current principal type being used')
 @allowed(['User', 'ServicePrincipal'])
-param myPrincipalType string
+param myPrincipalType string = 'User'
 @description('IP addresses to grant access to the AI services. Leave empty to skip')
-param allowedIpAddresses string
+param allowedIpAddresses string = ''
 var allowedIpAddressesArray = !empty(allowedIpAddresses) ? split(allowedIpAddresses, ',') : []
 @description('Resource group name for the AI services. Defauts to rg-<environmentName>')
 param resourceGroupName string = ''
@@ -21,10 +21,10 @@ param tags object = {}
 // Network configurations
 @description('Allow or deny public network access to the AI services (recommended: Disabled)')
 @allowed(['Enabled', 'Disabled'])
-param publicNetworkAccess string
+param publicNetworkAccess string = 'Enabled'
 @description('Authentication type to use (recommended: identity)')
 @allowed(['identity', 'accessKey'])
-param authMode string
+param authMode string = 'identity'
 @description('Address prefixes for the spoke vNet')
 param vnetAddressPrefixes array = ['10.0.0.0/16']
 @description('Address prefix for the private endpoint subnet')
@@ -56,7 +56,7 @@ param appPlanName string = ''
 @description('Name of the App Services Instance. Automatically generated if left blank')
 param appName string = ''
 @description('Whether to enable authentication (requires Entra App Developer role)')
-param enableAuthentication bool
+param enableAuthentication bool = false
 @description('Whether to deploy an AI Hub')
 param deployAIHub bool = true
 @description('Whether to deploy a sample AI Project')
@@ -64,9 +64,9 @@ param deployAIProject bool = true
 
 @description('Gen AI model name and version to deploy')
 @allowed(['gpt-4;1106-Preview', 'gpt-4;0125-Preview', 'gpt-4o;2024-05-13', 'gpt-4o-mini;2024-07-18'])
-param model string
+param model string = 'gpt-4o-mini;2024-07-18'
 @description('Tokens per minute capacity for the model. Units of 1000 (capacity = 10 means 10,000 tokens per minute)')
-param modelCapacity int
+param modelCapacity int = 50
 
 var modelName = split(model, ';')[0]
 var modelVersion = split(model, ';')[1]
