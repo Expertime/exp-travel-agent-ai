@@ -1,4 +1,4 @@
-name: Deploy Dev
+name: Run Integration Tests
 on:
   workflow_dispatch:
 
@@ -57,10 +57,10 @@ jobs:
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Provision Infrastructure
-        run: azd provision --no-prompt
+      - name: Retrieve environment
+        run: azd env refresh --no-prompt
         env:
           AZD_INITIAL_ENVIRONMENT_CONFIG: ${{ secrets.AZD_INITIAL_ENVIRONMENT_CONFIG }}
 
-      - name: Deploy Application
-        run: azd deploy --no-prompt
+      - name: Run tests
+        run: cd src && pytest --cov=. --cov-report xml --nf tests/* -h
