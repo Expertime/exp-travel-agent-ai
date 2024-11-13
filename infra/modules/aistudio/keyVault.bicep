@@ -21,7 +21,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     publicNetworkAccess: empty(allowedIpAddresses) ? publicNetworkAccess : 'Enabled'
     networkAcls: {
       bypass: 'AzureServices'
-      defaultAction: 'Deny'
+      defaultAction: publicNetworkAccess == 'Enabled' ? 'Allow' : 'Deny'
       virtualNetworkRules: []
       ipRules: [
         for ipAddress in allowedIpAddresses: {
