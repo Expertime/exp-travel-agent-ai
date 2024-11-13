@@ -24,7 +24,7 @@ resource bing 'Microsoft.Bing/accounts@2020-06-10' = {
   location: 'global'
   tags: tags
   sku: {
-    name: 'F1'
+    name: 'S1'
   }
   kind: 'Bing.Search.v7'
 }
