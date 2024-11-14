@@ -1,4 +1,5 @@
 param location string
+param vnetLocation string = location
 param appServicePlanName string
 param appServiceName string
 param msiID string

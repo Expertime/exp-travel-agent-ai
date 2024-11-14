@@ -1,4 +1,5 @@
 param location string
+param vnetLocation string = location
 param cosmosName string
 param keyVaultName string
 param tags object = {}
@@ -9,7 +10,6 @@ param grantAccessTo array = []
 param allowedIpAddresses array = []
 param authMode string
 
-@description('Cosmos DB Account to host agent chat history')
 resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
   name: cosmosName
   location: location
@@ -59,7 +59,7 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
 
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = if (publicNetworkAccess == 'Disabled') {
   name: 'pl-${cosmosName}'
-  location: location
+  location: vnetLocation
   tags: tags
   properties: {
     subnet: {

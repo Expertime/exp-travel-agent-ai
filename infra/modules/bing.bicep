@@ -1,4 +1,3 @@
-param location string
 param bingName string
 param keyVaultName string
 param tags object = {}

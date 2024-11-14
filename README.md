@@ -13,29 +13,40 @@ To get started with the Azure Agents Travel Assistant, follow the instructions b
 ### Prerequisites
 
 - An Azure subscription
+    - Azure OpenAI: 50k Tokens per Minute of Pay-as-you-go quota for GPT-4o or GPT-4o-mini
+    - Azure App Services: Available VM quota - P0v3 recommended
+- Azure CLI
+- Azure Developer CLI
 - Python 3.10 or later (for running locally)
 
 ### Installation
 
-1. Clone the repository:
+1. Before you begin, make sure you are logged in to both AZ and AZD CLIs
+    ```sh
+    az login # or az login -t <TENANT_ID>
+    azd auth login # or azd auth login --tenant <TENANT_ID>
+    ```
+
+2. Clone the repository:
     ```sh
     git clone https://github.com/Azure-Samples/azureai-travel-agent-python
     cd azureai-travel-agent-python
     ```
 
-2. Deploy the infrastructure and sample app
+3. Deploy the infrastructure and sample app
     ```sh
     azd up
     ```
+You will be prompted to select and Azure subscription, a region, and an environment name. The environment name should be a short string, and it will be used to name the deployed resources.
 
-3. (Optional) Run locally:
+4. (Optional) Run locally:
     ```sh
     cd src
     pip install -r requirements.txt
     python app.py
     ```
 
-4. (Optional) Open http://localhost:3978/api/messages in the [Bot Framework Emulator](https://github.com/microsoft/BotFramework-Emulator)
+5. (Optional) Open http://localhost:3978/api/messages in the [Bot Framework Emulator](https://github.com/microsoft/BotFramework-Emulator)
 
 ## Features
 
@@ -52,14 +63,31 @@ You may deploy this solution on any regions that support Azure AI Agents. Some c
 
 - [Regionalization in Azure AI Bot Service] https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-regionalization?view=azure-bot-service-4.0
 
+If you need to deploy services across more than one region, use the commands below to set regions for specific services. Services with unspecified locations will be created in the "main" region chosen.
+
+```sh
+# azd env set AZURE_<SERVICENAME>_LOCATION <LOCATION>
+# For example:
+azd env set AZURE_APPSERVICE_LOCATION eastus2
+azd env set AZURE_COSMOSDB_LOCATION westus
+```
+
+Review ./infra/main.parameters.json for a full list of available environment configurations.
+
 ### Model Support
 
 This quickstart supports both GPT-4o and GPT-4o-mini. Ohter models may also perform well depending on question complexity. Standard deployments are used by default, but you may update them to Global Standard or Provisioned SKUs after successfully deploying the solution.
 
 ### Troubleshooting
 
-- `Message: Invalid subscription ID`: Your subscription may not be enabled for Azure AI Agents. During the preview of this functionality, it may be required to complete additional steps to onboard your subscription to Azure AI Agents. Alternatively, update the .env file (locally) or app service environment variables (on Azure) to point the application to another AI Project.
-- `azure.core.exceptions.HttpResponseError: Operation returned an invalid status 'Forbidden'`: Your current user does not have Azure ML Data Scientist role, or your IP is not allowed to access the Azure AI Hub. Review the RBAC and networking configurations of your AI Hub/Project.
+- Provisioning errors:
+    - `Azure Open AI: InsufficientQuota`: Your Azure Subscription does not have enough pay-as-you-go quota for the selected region/model. Select a different subscription, region, model, or [request quota](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/quota?tabs=rest).
+    - `Bing Search: Insufficient Quota`: You cannot add a new Bing resource in the selected Subscription and SKU. Select a different SKU or region, or delete other Bing Search resources
+    - `Cosmos DB: Service Unavailable`: This region may be under high demand and does not have available resources for your subcription type. Select a different region or try again later
+    - `Any resource: Invalid Resource Location, the resource already exists`: A resource with the same name already exists in a different region or resource group. Delete existing resources or retry with a different environment name
+- Runtime errors:
+    - `Message: Invalid subscription ID`: Your subscription may not be enabled for Azure AI Agents. During the preview of this functionality, it may be required to complete additional steps to onboard your subscription to Azure AI Agents. Alternatively, update the .env file (locally) or app service environment variables (on Azure) to point the application to another AI Project.
+    - `azure.core.exceptions.ClientAuthenticationError: (PermissionDenied) Principal does not have access to API/Operation.`: Your current user does not have Azure ML Data Scientist role, or your IP is not allowed to access the Azure AI Hub. Review the RBAC and networking configurations of your AI Hub/Project. Similar exceptions may happen when not logged in with the Azure CLI.
 
 ## Security
 

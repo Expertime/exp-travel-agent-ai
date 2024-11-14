@@ -1,4 +1,5 @@
 param location string
+param vnetLocation string = location
 param aiServicesName string
 param tags object = {}
 param privateEndpointSubnetId string
@@ -37,7 +38,7 @@ resource aiServices 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
 
 resource aiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = if (publicNetworkAccess == 'Disabled') {
   name: 'pl-oai-${aiServicesName}'
-  location: location
+  location: vnetLocation
   tags: tags
   properties: {
     subnet: {

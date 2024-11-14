@@ -1,4 +1,5 @@
 param location string
+param vnetLocation string = location
 param searchName string
 param tags object = {}
 param publicNetworkAccess string
@@ -35,7 +36,7 @@ resource search 'Microsoft.Search/searchServices@2024-06-01-preview' = {
 
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = if (publicNetworkAccess == 'Disabled') {
   name: 'pl-${searchName}'
-  location: location
+  location: vnetLocation
   tags: tags
   properties: {
     subnet: {

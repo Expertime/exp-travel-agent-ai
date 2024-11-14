@@ -1,4 +1,5 @@
 param location string
+param vnetLocation string = location
 
 // Dependencies
 param aiServicesName string
@@ -122,7 +123,7 @@ resource aiProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01-prev
 
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = if (publicNetworkAccess == 'Disabled') {
   name: 'pl-${aiHubName}'
-  location: location
+  location: vnetLocation
   tags: tags
   properties: {
     subnet: {
@@ -165,8 +166,8 @@ resource aiDeveloper 'Microsoft.Authorization/roleDefinitions@2022-04-01' existi
 
 resource aiDeveloperAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = [
   for principal in grantAccessTo: if (!empty(principal.id)) {
-    name: guid(principal.id, keyVault.id, aiDeveloper.id)
-    scope: aiProject
+    name: guid(principal.id, aiHub.id, aiDeveloper.id)
+    scope: aiHub
     properties: {
       roleDefinitionId: aiDeveloper.id
       principalId: principal.id
@@ -181,4 +182,4 @@ output aiHubName string = aiHub.name
 output aiProjectID string = aiProject.id
 output aiProjectName string = aiProject.name
 output aiProjectDiscoveryUrl string = aiProject.properties.discoveryUrl
-output aiProjectConnectionString string = '${split(aiProject.properties.discoveryUrl, '/')[2]};${subscription().subscriptionId};${resourceGroup().name};${aiHubName}'
+output aiProjectConnectionString string = '${split(aiProject.properties.discoveryUrl, '/')[2]};${subscription().subscriptionId};${resourceGroup().name};${aiProject.name}'

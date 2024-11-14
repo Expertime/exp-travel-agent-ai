@@ -68,6 +68,27 @@ param model string = 'gpt-4o-mini;2024-07-18'
 @description('Tokens per minute capacity for the model. Units of 1000 (capacity = 10 means 10,000 tokens per minute)')
 param modelCapacity int = 50
 
+
+// Location and overrides
+@description('Location to deploy AI Services')
+param aiServicesLocation string = deployment().location
+@description('Location to deploy Cosmos DB')
+param cosmosLocation string = deployment().location
+@description('Location to deploy App Service')
+param appServiceLocation string = deployment().location
+@description('Location to deploy Bot Service')
+param botServiceLocation string = 'global'
+@description('Location to deploy Storage account')
+param storageLocation string = deployment().location
+@description('Location to deploy Key Vault')
+param keyVaultLocation string = deployment().location
+@description('Location to deploy Managed Identity')
+param msiLocation string = deployment().location
+@description('Location to deploy virtual network resources')
+param vnetLocation string = deployment().location
+@description('Location to deploy private DNS zones')
+param dnsLocation string = deployment().location
+
 var modelName = split(model, ';')[0]
 var modelVersion = split(model, ';')[1]
 
@@ -118,7 +139,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = {
 
 resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = if (publicNetworkAccess == 'Disabled') {
   name: names.dnsResourceGroup
-  location: location
+  location: dnsLocation
   tags: tags
 }
 
@@ -127,7 +148,7 @@ module m_network 'modules/aistudio/network.bicep' = if (publicNetworkAccess == '
   name: 'deploy_vnet'
   scope: resourceGroup
   params: {
-    location: location
+    location: vnetLocation
     vnetName: names.vnet
     vnetAddressPrefixes: vnetAddressPrefixes
     privateEndpointSubnetName: names.privateLinkSubnet
@@ -152,7 +173,7 @@ module m_msi 'modules/msi.bicep' = {
   name: 'deploy_msi'
   scope: resourceGroup
   params: {
-    location: location
+    location: empty(msiLocation) ? location : msiLocation
     msiName: names.msi
     tags: tags
   }
@@ -163,7 +184,8 @@ module m_aiservices 'modules/aistudio/aiservices.bicep' = {
   name: 'deploy_aiservices'
   scope: resourceGroup
   params: {
-    location: location
+    location: empty(aiServicesLocation) ? location : aiServicesLocation
+    vnetLocation: empty(vnetLocation) ? location : vnetLocation 
     aiServicesName: names.aiServices
     publicNetworkAccess: publicNetworkAccess
     privateEndpointSubnetId: privateEndpointSubnetId
@@ -192,7 +214,8 @@ module m_storage 'modules/aistudio/storage.bicep' = {
   name: 'deploy_storage'
   scope: resourceGroup
   params: {
-    location: location
+    location: empty(storageLocation) ? location : storageLocation
+    vnetLocation: empty(vnetLocation) ? location : vnetLocation 
     storageName: names.storage
     publicNetworkAccess: publicNetworkAccess
     authMode: authMode
@@ -218,7 +241,8 @@ module m_keyVault 'modules/aistudio/keyVault.bicep' = {
   name: 'deploy_keyVault'
   scope: resourceGroup
   params: {
-    location: location
+    location: empty(keyVaultLocation) ? location : keyVaultLocation
+    vnetLocation: empty(vnetLocation) ? location : vnetLocation  
     keyVaultName: names.keyVault
     publicNetworkAccess: publicNetworkAccess
     privateEndpointSubnetId: privateEndpointSubnetId
@@ -243,7 +267,8 @@ module m_aihub 'modules/aistudio/aihub.bicep' = if (deployAIHub) {
   name: 'deploy_ai'
   scope: resourceGroup
   params: {
-    location: location
+    location: empty(aiServicesLocation) ? location : aiServicesLocation
+    vnetLocation: empty(vnetLocation) ? location : vnetLocation  
     aiHubName: names.aiHub
     aiProjectName: 'cog-ai-prj-${environmentName}-${uniqueSuffix}'
     aiServicesName: m_aiservices.outputs.aiServicesName
@@ -277,27 +302,8 @@ module m_bing 'modules/bing.bicep' = {
   name: 'deploy_bing'
   scope: resourceGroup
   params: {
-    location: location
     bingName: names.bing
     keyVaultName: m_keyVault.outputs.keyVaultName
-    // publicNetworkAccess: publicNetworkAccess
-    // privateEndpointSubnetId: privateEndpointSubnetId
-    // openAIPrivateDnsZoneId: dnsZoneIds[0]
-    // cognitiveServicesPrivateDnsZoneId: dnsZoneIds[1]
-    // authMode: authMode
-    // grantAccessTo: authMode == 'identity'
-    //   ? [
-    //       {
-    //         id: myPrincipalId
-    //         type: myPrincipalType
-    //       }
-    //       {
-    //         id: m_msi.outputs.msiPrincipalID
-    //         type: 'ServicePrincipal'
-    //       }
-    //     ]
-    //   : []
-    // allowedIpAddresses: allowedIpAddressesArray
     tags: tags
   }
 }
@@ -306,7 +312,8 @@ module m_cosmos 'modules/cosmos.bicep' = {
   name: 'deploy_cosmos'
   scope: resourceGroup
   params: {
-    location: location
+    location: empty(cosmosLocation) ? location : cosmosLocation
+    vnetLocation: empty(vnetLocation) ? location : vnetLocation  
     cosmosName: names.cosmos
     keyVaultName: m_keyVault.outputs.keyVaultName
     publicNetworkAccess: publicNetworkAccess
@@ -348,7 +355,8 @@ module m_app 'modules/appservice.bicep' = {
   name: 'deploy_app'
   scope: resourceGroup
   params: {
-    location: location
+    location: empty(appServiceLocation) ? location : appServiceLocation
+    vnetLocation: empty(vnetLocation) ? location : vnetLocation  
     appServicePlanName: names.appPlan
     appServiceName: names.app
     tags: tags
@@ -374,7 +382,7 @@ module m_bot 'modules/botservice.bicep' = {
   name: 'deploy_bot'
   scope: resourceGroup
   params: {
-    location: 'global'
+    location: empty(botServiceLocation) ? location : botServiceLocation
     botServiceName: names.bot
     keyVaultName: m_keyVault.outputs.keyVaultName
     tags: tags

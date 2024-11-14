@@ -1,4 +1,5 @@
 param location string
+param vnetLocation string = location
 param keyVaultName string
 param tags object = {}
 param publicNetworkAccess string
@@ -39,7 +40,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = if (publicNetworkAccess == 'Disabled') {
   name: 'pl-${keyVaultName}'
-  location: location
+  location: vnetLocation
   tags: tags
   properties: {
     subnet: {
