@@ -9,7 +9,7 @@ from azure.keyvault.secrets import SecretClient
 from azure.ai.projects import AIProjectClient
 from azure.ai.projects.operations import AgentsOperations
 from aiohttp import web
-from botbuilder.azure import (
+from services.cosmos import (
     CosmosDbPartitionedStorage,
     CosmosDbPartitionedConfig,
 )
@@ -88,10 +88,9 @@ if os.getenv("AZURE_COSMOSDB_ENDPOINT"):
             cosmos_db_endpoint=os.getenv("AZURE_COSMOSDB_ENDPOINT"),
             database_id=os.getenv("AZURE_COSMOSDB_DATABASE_ID"),
             container_id=os.getenv("AZURE_COSMOSDB_CONTAINER_ID"),
-            auth_key=os.getenv("AZURE_COSMOSDB_AUTH_KEY"),
+            credential=credential,
         )
     )
-    # storage.client = CosmosClient(os.getenv("AZURE_COSMOSDB_ENDPOINT"), auth=credential)
 else:
     storage = MemoryStorage()
 

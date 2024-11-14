@@ -320,10 +320,7 @@ module m_cosmos 'modules/cosmos.bicep' = {
     privateEndpointSubnetId: privateEndpointSubnetId
     privateDnsZoneId: dnsZoneIds[5]
     allowedIpAddresses: allowedIpAddressesArray
-    // We need key based auth here because Bot Framework SDK doesn't support MSI auth for Cosmos DB
-    // This can be changed to identity if the SDK supports it in the future
-    authMode: 'accessKey'
-    // authMode: authMode
+    authMode: authMode
     grantAccessTo: authMode == 'identity'
       ? [
           {
