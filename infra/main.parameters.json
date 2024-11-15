@@ -77,9 +77,6 @@
     "dnsLocation": {
       "value": "${AZURE_APPSERVICE_LOCATION}"
     },
-    "publicNetworkAccess": {
-      "value": "${AZURE_PUBLIC_NETWORK_ACCESS}"
-    },
     "tags": {
       "value": {
         "Owner": "AI Team",

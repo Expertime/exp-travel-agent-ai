@@ -21,7 +21,7 @@ param tags object = {}
 // Network configurations
 @description('Allow or deny public network access to the AI services (recommended: Disabled)')
 @allowed(['Enabled', 'Disabled'])
-param publicNetworkAccess string = 'Enabled'
+param publicNetworkAccess string
 @description('Authentication type to use (recommended: identity)')
 @allowed(['identity', 'accessKey'])
 param authMode string = 'identity'
@@ -64,9 +64,9 @@ param deployAIProject bool = true
 
 @description('Gen AI model name and version to deploy')
 @allowed(['gpt-4;1106-Preview', 'gpt-4;0125-Preview', 'gpt-4o;2024-05-13', 'gpt-4o-mini;2024-07-18'])
-param model string = 'gpt-4o-mini;2024-07-18'
+param model string
 @description('Tokens per minute capacity for the model. Units of 1000 (capacity = 10 means 10,000 tokens per minute)')
-param modelCapacity int = 50
+param modelCapacity int
 
 
 // Location and overrides
