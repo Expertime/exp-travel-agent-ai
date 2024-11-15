@@ -6,7 +6,6 @@ param environmentName string
 @description('Principal ID to grant access to the AI services. Leave empty to skip')
 param myPrincipalId string = ''
 @description('Current principal type being used')
-@allowed(['User', 'ServicePrincipal'])
 param myPrincipalType string = 'User'
 @description('IP addresses to grant access to the AI services. Leave empty to skip')
 param allowedIpAddresses string = ''
@@ -196,7 +195,7 @@ module m_aiservices 'modules/aistudio/aiservices.bicep' = {
       ? [
           {
             id: myPrincipalId
-            type: myPrincipalType
+            type: empty(myPrincipalType) ? 'User' : myPrincipalType
           }
           {
             id: m_msi.outputs.msiPrincipalID
@@ -225,7 +224,7 @@ module m_storage 'modules/aistudio/storage.bicep' = {
       ? [
           {
             id: myPrincipalId
-            type: myPrincipalType
+            type: empty(myPrincipalType) ? 'User' : myPrincipalType
           }
           {
             id: m_msi.outputs.msiPrincipalID
@@ -251,7 +250,7 @@ module m_keyVault 'modules/aistudio/keyVault.bicep' = {
     grantAccessTo: [
         {
           id: myPrincipalId
-          type: myPrincipalType
+          type: empty(myPrincipalType) ? 'User' : myPrincipalType
         }
         {
           id: m_msi.outputs.msiPrincipalID
@@ -285,7 +284,7 @@ module m_aihub 'modules/aistudio/aihub.bicep' = if (deployAIHub) {
       ? [
           {
             id: myPrincipalId
-            type: myPrincipalType
+            type: empty(myPrincipalType) ? 'User' : myPrincipalType
           }
           {
             id: m_msi.outputs.msiPrincipalID
@@ -325,7 +324,7 @@ module m_cosmos 'modules/cosmos.bicep' = {
       ? [
           {
             id: myPrincipalId
-            type: myPrincipalType
+            type: empty(myPrincipalType) ? 'User' : myPrincipalType
           }
           {
             id: m_msi.outputs.msiPrincipalID
