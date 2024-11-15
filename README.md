@@ -12,10 +12,10 @@ Below are the main components deployed as part of this solution:
 
 ![Solution Architecture](./media/architecture.png)
 
-- User sends messages through one of the [supported Bot Framework Channels](https://learn.microsoft.com/en-us/azure/bot-service/bot-service-channels-reference?view=azure-bot-service-4.0)
-- The Azure Bot Service connects to the Python web application through the /api/messages endpoint
-- The Application communicates with the Azure AI Agent Runtime to process incoming messages using assistants
-- Results are streamed back in realtime, and posted back to the user's channel.
+- User sends messages through one of the [supported Bot Framework Channels](https://learn.microsoft.com/en-us/azure/bot-service/bot-service-channels-reference?view=azure-bot-service-4.0);
+- The Azure Bot Service connects to the Python web application through the /api/messages endpoint;
+- The Application communicates with the Azure AI Agent Runtime to process incoming messages using assistants;
+- Results are streamed back in realtime, and posted back to the user's channel;
 - The conversation history is stored in Cosmos DB, as well as ephemeral conversation state.
 > Note: Communications between App Services, Azure AI and Cosmos DB can be configured to use Private Endpoints. Authentication to these services is done using a User-Assigned Managed Identity.
 
