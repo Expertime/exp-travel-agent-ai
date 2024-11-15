@@ -47,7 +47,7 @@
     "allowedIpAddresses": {
       "value": "${ALLOWED_IP_ADDRESSES}"
     },
-    "principalType": {
+    "myPrincipalType": {
       "value": "${AZURE_PRINCIPAL_TYPE}"
     },
     "myPrincipalId": {

@@ -74,7 +74,7 @@ You will be prompted to select and Azure subscription, a region, and an environm
 
 You may deploy this solution on any regions that support Azure AI Agents. Some components, such as Bot Service and Bing Search, are deployed in a global model, and as such are not tied to a single region. Make sure to review Data Residency requirements.
 
-- [Regionalization in Azure AI Bot Service] https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-regionalization?view=azure-bot-service-4.0
+- [Regionalization in Azure AI Bot Service](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-regionalization?view=azure-bot-service-4.0)
 
 If you need to deploy services across more than one region, use the commands below to set regions for specific services. Services with unspecified locations will be created in the "main" region chosen.
 
