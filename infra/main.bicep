@@ -139,7 +139,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = {
 
 resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = if (publicNetworkAccess == 'Disabled') {
   name: names.dnsResourceGroup
-  location: dnsLocation
+  location: empty(dnsLocation) ? location : dnsLocation
   tags: tags
 }
 
@@ -148,7 +148,7 @@ module m_network 'modules/aistudio/network.bicep' = if (publicNetworkAccess == '
   name: 'deploy_vnet'
   scope: resourceGroup
   params: {
-    location: vnetLocation
+    location: empty(vnetLocation) ? location : vnetLocation 
     vnetName: names.vnet
     vnetAddressPrefixes: vnetAddressPrefixes
     privateEndpointSubnetName: names.privateLinkSubnet
