@@ -74,6 +74,8 @@ You will be prompted to select and Azure subscription, a region, and an environm
 
 You may deploy this solution on any regions that support Azure AI Agents. Some components, such as Bot Service and Bing Search, are deployed in a global model, and as such are not tied to a single region. Make sure to review Data Residency requirements.
 
+**At this time, only the East US region supports Azure AI Agents.**
+
 - [Regionalization in Azure AI Bot Service](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-regionalization?view=azure-bot-service-4.0)
 
 If you need to deploy services across more than one region, use the commands below to set regions for specific services. Services with unspecified locations will be created in the "main" region chosen.
@@ -106,12 +108,11 @@ This quickstart supports both GPT-4o and GPT-4o-mini. Ohter models may also perf
 
 Most of the resources deployed in this template leverage Private Endpoints and Entra ID authentication for enhanced security. Make sure to use the corresponding parameters to use these features.
 
-There are two exceptions to this pattern in this repository:
+There is currently one exception to this pattern in this repository:
 
 - Bot Service does not support Entra ID authentication for the Direct Line / Web channel.
-- The Bot Framework SDK for Python does not support Entra ID authentication for the Cosmos DB connector.
 
-For this reason, both services utilize API Keys, properly stored in the Key Vault deployed with the quickstart.
+For this reason, this service will use a secret, properly stored in the Key Vault deployed with the quickstart.
 
 ## Resources
 
