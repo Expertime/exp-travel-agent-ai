@@ -7,6 +7,17 @@ services:
         host: appservice
         language: python
 hooks:
+    preprovision: 
+      windows:
+        shell: pwsh
+        run: azd env set AZURE_PRINCIPAL_TYPE $(az account show --query "user.type" -o tsv)
+        interactive: false
+        continueOnError: false
+      posix:
+        shell: sh
+        run: azd env set AZURE_PRINCIPAL_TYPE $(az account show --query "user.type" -o tsv)
+        interactive: false
+        continueOnError: false
     postprovision:
       windows:
         shell: pwsh
