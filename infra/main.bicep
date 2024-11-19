@@ -6,7 +6,7 @@ param environmentName string
 @description('Principal ID to grant access to the AI services. Leave empty to skip')
 param myPrincipalId string = ''
 @description('Current principal type being used')
-param myPrincipalType string = 'User'
+param myPrincipalType string = 'ServicePrincipal'
 @description('IP addresses to grant access to the AI services. Leave empty to skip')
 param allowedIpAddresses string = ''
 var allowedIpAddressesArray = !empty(allowedIpAddresses) ? split(allowedIpAddresses, ',') : []
