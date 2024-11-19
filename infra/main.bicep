@@ -6,7 +6,8 @@ param environmentName string
 @description('Principal ID to grant access to the AI services. Leave empty to skip')
 param myPrincipalId string = ''
 @description('Current principal type being used')
-param myPrincipalType string = 'ServicePrincipal'
+@allowed(['User', 'ServicePrincipal'])
+param myPrincipalType string
 @description('IP addresses to grant access to the AI services. Leave empty to skip')
 param allowedIpAddresses string = ''
 var allowedIpAddressesArray = !empty(allowedIpAddresses) ? split(allowedIpAddresses, ',') : []
@@ -195,7 +196,7 @@ module m_aiservices 'modules/aistudio/aiservices.bicep' = {
       ? [
           {
             id: myPrincipalId
-            type: empty(myPrincipalType) ? 'User' : myPrincipalType
+            type: myPrincipalType
           }
           {
             id: m_msi.outputs.msiPrincipalID
@@ -224,7 +225,7 @@ module m_storage 'modules/aistudio/storage.bicep' = {
       ? [
           {
             id: myPrincipalId
-            type: empty(myPrincipalType) ? 'User' : myPrincipalType
+            type: myPrincipalType
           }
           {
             id: m_msi.outputs.msiPrincipalID
@@ -250,7 +251,7 @@ module m_keyVault 'modules/aistudio/keyVault.bicep' = {
     grantAccessTo: [
         {
           id: myPrincipalId
-          type: empty(myPrincipalType) ? 'User' : myPrincipalType
+          type: myPrincipalType
         }
         {
           id: m_msi.outputs.msiPrincipalID
@@ -284,7 +285,7 @@ module m_aihub 'modules/aistudio/aihub.bicep' = if (deployAIHub) {
       ? [
           {
             id: myPrincipalId
-            type: empty(myPrincipalType) ? 'User' : myPrincipalType
+            type: myPrincipalType
           }
           {
             id: m_msi.outputs.msiPrincipalID
@@ -324,7 +325,7 @@ module m_cosmos 'modules/cosmos.bicep' = {
       ? [
           {
             id: myPrincipalId
-            type: empty(myPrincipalType) ? 'User' : myPrincipalType
+            type: myPrincipalType
           }
           {
             id: m_msi.outputs.msiPrincipalID
