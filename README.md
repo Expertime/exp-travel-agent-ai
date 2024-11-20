@@ -1,10 +1,13 @@
 # Azure Agents Travel Assistant
 
-This repository contains an end-to-end sample of a travel assistant implemented with Azure Agents Runtime and Bot Framework. The travel assistant leverages the Azure AI platform to understand images and documents, providing assistance during travel planning and common travel situations. Key features include:
+End-to-end sample of a travel agent implemented with Azure AI Agent Service and Bot Framework. The travel assistant leverages the Azure AI platform to understand images and documents, providing assistance during travel planning and common travel situations. Key features include:
 
 - **Image Recognition**: Identify landmarks, extract text from travel documents, and more.
 - **Document Understanding**: Parse itineraries, booking confirmations, and other travel-related documents.
 - **Travel Assistance**: Offer recommendations, reminders, and support for various travel scenarios.
+
+> [!IMPORTANT]
+> The Azure AI Agent Service is currently in Private Preview. This early stage of development means the product is actively evolving, with significant updates and improvements expected. Users should anticipate changes as we work towards refining features, enhancing functionality, and expanding capabilities. We welcome feedback and contributions during this phase to help shape the future of the product. [Azure AI Agent Service: Private Preview Waitlist Application](https://customervoice.microsoft.com/Pages/ResponsePage.aspx?id=v4j5cvGGr0GRqy180BHbR4zfDSs3yfVOpxzjhs7PkSlUNlhGSlZTMkFBSDNaSVRMSDZBUjhPT1VLMCQlQCN0PWcu)
 
 ## Solution Architecture
 
