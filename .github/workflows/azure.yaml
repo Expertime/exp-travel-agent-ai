@@ -36,7 +36,7 @@ jobs:
           registryUsername: ${{ secrets.REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.REGISTRY_PASSWORD }}
           appSourcePath: ${{ github.workspace }}
-          dockerfilePath: ./src/Dockerfile
+          dockerfilePath: Dockerfile
           containerAppName: aca-exp-travelagent-dev
           resourceGroup: rg-demogenai-dev
           imageToBuild: acrdemogenaidev.azurecr.io/exp-travelagent-socle:latest
