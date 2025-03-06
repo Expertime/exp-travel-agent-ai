@@ -1,0 +1,3 @@
+properties:
+  template:
+    revisionSuffix: "{{ Pipeline run id and number }}"

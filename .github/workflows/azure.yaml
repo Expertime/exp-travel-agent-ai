@@ -1,0 +1,42 @@
+name: Docker Build and Push to ACR
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Update values.yaml
+        uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: "./infra/container-app-suffixes.yml"
+          propertyPath: "template.revisionSuffix"
+          value: ${{ github.run_id }}-${{ github.run_number }}
+          commitChange: false
+
+      - name: Deploy container app
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          registryUrl: acrdemogenaidev.azurecr.io
+          registryUsername: ${{ secrets.REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.REGISTRY_PASSWORD }}
+          appSourcePath: ${{ github.workspace }}
+          dockerfilePath: ./src/Dockerfile
+          containerAppName: aca-exp-travelagent-dev
+          resourceGroup: rg-demogenai-dev
+          imageToBuild: acrdemogenaidev.azurecr.io/exp-travelagent-socle:latest
+          yamlConfigPath: ./infra/container-app-suffixes.yml
