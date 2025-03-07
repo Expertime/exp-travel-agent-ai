@@ -77,7 +77,9 @@ secret_client = SecretClient(
 aoai_client = AzureOpenAI(
     api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
     azure_endpoint=os.getenv("AZURE_OPENAI_API_ENDPOINT"),
-    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+    api_key=os.getenv(
+        "AZURE_OPENAI_API_KEY", secret_client.get_secret("travelagent-openai-key").value
+    ),
     azure_ad_token_provider=get_bearer_token_provider(
         credential, "https://cognitiveservices.azure.com/.default"
     ),
@@ -96,7 +98,7 @@ storage = None
 if os.getenv("AZURE_COSMOSDB_ENDPOINT"):
     auth_key = os.getenv(
         "AZURE_COSMOSDB_AUTH_KEY",
-        secret_client.get_secret("AZURE-COSMOS-AUTH-KEY").value,
+        secret_client.get_secret("travelagent-cosmos-key").value,
     )
     storage = CosmosDbPartitionedStorage(
         CosmosDbPartitionedConfig(
